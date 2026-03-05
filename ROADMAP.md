@@ -1,4 +1,4 @@
-# StreamSync Technical Roadmap
+# FlickFuse Technical Roadmap
 
 As Phase 7 (Maintenance & Iteration) concludes the initial build, here are the targeted areas for future enhancements, technical debt resolution, and feature additions.
 

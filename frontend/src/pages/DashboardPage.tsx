@@ -171,7 +171,7 @@ export default function DashboardPage() {
           <div className="grid-3">
             {[
               { emoji: '1️⃣', title: 'Import Watch History', desc: 'Start by uploading your Netflix or Prime CSV', path: '/import', cta: 'Import Now' },
-              { emoji: '2️⃣', title: 'Find Friends', desc: 'Add friends using their unique StreamSync ID', path: '/friends', cta: 'Find Friends' },
+              { emoji: '2️⃣', title: 'Find Friends', desc: 'Add friends using their unique FlickFuse ID', path: '/friends', cta: 'Find Friends' },
               { emoji: '3️⃣', title: 'Create Lists', desc: 'Curate and share your favourite watch lists', path: '/lists', cta: 'Create List' },
             ].map((step) => (
               <div key={step.title} className="card card-hover">

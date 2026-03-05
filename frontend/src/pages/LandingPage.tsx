@@ -30,7 +30,7 @@ export default function LandingPage() {
     <div style={{ minHeight: '100vh', overflowX: 'hidden' }}>
       {/* ── Navbar ── */}
       <nav className="navbar">
-        <span className="navbar-brand">🎬 StreamSync</span>
+        <span className="navbar-brand">🎬 FlickFuse</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
           <Link to="/login"  className="btn btn-ghost btn-sm">Login</Link>
           <Link to="/signup" className="btn btn-primary btn-sm">Get Started Free</Link>
@@ -119,7 +119,7 @@ export default function LandingPage() {
       {/* ── Features ── */}
       <section style={{ padding: '80px 24px', background: 'rgba(99,102,241,0.03)', borderTop: '1px solid var(--color-border)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', fontSize: '2rem', fontWeight: 700, marginBottom: '16px' }}>Why StreamSync?</h2>
+          <h2 style={{ textAlign: 'center', fontSize: '2rem', fontWeight: 700, marginBottom: '16px' }}>Why FlickFuse?</h2>
           <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', marginBottom: '56px' }}>
             Built different from every streaming aggregator out there
           </p>
@@ -160,7 +160,7 @@ export default function LandingPage() {
         borderTop: '1px solid var(--color-border)', padding: '32px 24px',
         textAlign: 'center', color: 'var(--color-text-faint)', fontSize: '0.85rem',
       }}>
-        <p>© 2026 StreamSync · Built with ❤️ for multi-platform streamers</p>
+        <p>© 2026 FlickFuse · Built with ❤️ for multi-platform streamers</p>
       </footer>
     </div>
   );

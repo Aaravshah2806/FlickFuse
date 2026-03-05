@@ -71,7 +71,7 @@ export default function FriendsPage() {
               <div className="empty-state">
                 <div className="empty-state-icon">👥</div>
                 <div className="empty-state-title">No friends yet</div>
-                <div className="empty-state-desc">Find friends by their unique StreamSync ID and start discovering what they watch.</div>
+                <div className="empty-state-desc">Find friends by their unique FlickFuse ID and start discovering what they watch.</div>
                 <button onClick={() => setTab('find')} className="btn btn-primary" style={{ marginTop: '8px' }}>
                   <UserPlus size={16} /> Find Friends
                 </button>
@@ -140,7 +140,7 @@ export default function FriendsPage() {
           <div className="card" style={{ maxWidth: '480px' }}>
             <h2 style={{ fontWeight: 700, marginBottom: '8px' }}>Find by Unique ID</h2>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '20px' }}>
-              Ask your friend for their StreamSync ID (format: ABC-12345)
+              Ask your friend for their FlickFuse ID (format: ABC-12345)
             </p>
 
             <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>

@@ -1,5 +1,5 @@
 """
-main.py — FastAPI application entry point for StreamSync Python backend
+main.py — FastAPI application entry point for FlickFuse Python backend
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger("streamsync")
+logger = logging.getLogger("flickfuse")
 
 load_dotenv()
 
@@ -31,20 +31,20 @@ from routers import auth, users, friends, lists, watch_events, recommendations, 
 # ─── Lifespan (startup / shutdown) ───────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("StreamSync API (Python) starting up…")
+    logger.info("FlickFuse API (Python) starting up…")
     await connect_postgres()
     await connect_redis()
     yield
     await close_postgres()
     await close_redis()
-    logger.info("StreamSync API shut down")
+    logger.info("FlickFuse API shut down")
 
 
 # ─── App ─────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="StreamSync API",
+    title="FlickFuse API",
     version="1.0.0",
-    description="StreamSync backend — Python / FastAPI edition",
+    description="FlickFuse backend — Python / FastAPI edition",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -52,7 +52,7 @@ app = FastAPI(
 
 # ─── CORS ────────────────────────────────────────────────────────────────────
 origins = (
-    ["https://streamsync.app"]
+    ["https://flickfuse.app"]
     if os.getenv("ENV") == "production"
     else [
         "http://localhost:5173",
@@ -82,7 +82,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 async def health():
     return {
         "status": "ok",
-        "service": "StreamSync API",
+        "service": "FlickFuse API",
         "version": "1.0.0",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "environment": os.getenv("ENV", "development"),

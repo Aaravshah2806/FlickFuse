@@ -31,7 +31,7 @@ export default function SignupPage() {
           <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>✨</div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '6px' }}>Create your account</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
-            Join StreamSync — free forever
+            Join FlickFuse — free forever
           </p>
         </div>
 

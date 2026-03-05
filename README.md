@@ -1,6 +1,6 @@
-# StreamSync
+# FlickFuse
 
-StreamSync is a social streaming platform built to unify viewing histories across Netflix, Prime Video, and Hotstar, providing AI-powered recommendations and social tracking.
+FlickFuse is a social streaming platform built to unify viewing histories across Netflix, Prime Video, and Hotstar, providing AI-powered recommendations and social tracking.
 
 ## Core Features
 
@@ -23,8 +23,8 @@ The easiest way to run the entire stack is with Docker and Docker Compose.
 1. **Clone and setup environment**:
 
    ```bash
-   git clone https://github.com/yourusername/streamsync.git
-   cd streamsync
+   git clone https://github.com/yourusername/flickfuse.git
+   cd flickfuse
    cp .env.example .env
    # Edit .env with any required API keys (OpenAI, TMDB)
    ```
@@ -38,7 +38,7 @@ The easiest way to run the entire stack is with Docker and Docker Compose.
    _Note: On initial creation, wait a few seconds, then manually run migrations against the Postgres container if testing the Node backend:_
 
    ```bash
-   docker exec -i stream-sync-postgres-1 psql -U user -d postgres -c "CREATE DATABASE streamsync;"
+   docker exec -i flickfuse-postgres-1 psql -U user -d postgres -c "CREATE DATABASE flickfuse;"
    npm run migrate --prefix backend
    ```
 
@@ -76,4 +76,4 @@ cd python-backend && python -m pytest --cov=.
 
 ## Deployment
 
-StreamSync includes definitions to orchestrate the entire app in a single `docker-compose.yml` for production deployments. Continuous integration via GitHub Actions is pre-configured in `.github/workflows/ci.yml`.
+FlickFuse includes definitions to orchestrate the entire app in a single `docker-compose.yml` for production deployments. Continuous integration via GitHub Actions is pre-configured in `.github/workflows/ci.yml`.

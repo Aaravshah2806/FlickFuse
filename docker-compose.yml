@@ -19,7 +19,7 @@ services:
     environment:
       - ENV=production
       - PORT=3000
-      - DATABASE_URL=postgresql://user:password@postgres:5432/streamsync
+      - DATABASE_URL=postgresql://user:password@postgres:5432/flickfuse
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_ACCESS_EXPIRY_HOURS=24
@@ -33,7 +33,7 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: streamsync
+      POSTGRES_DB: flickfuse
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
     ports:
@@ -41,7 +41,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d streamsync"]
+      test: ["CMD-SHELL", "pg_isready -U user -d flickfuse"]
       interval: 10s
       timeout: 5s
       retries: 5

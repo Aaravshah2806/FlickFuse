@@ -14,7 +14,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <nav className="navbar">
-        <NavLink to="/dashboard" className="navbar-brand">🎬 StreamSync</NavLink>
+        <NavLink to="/dashboard" className="navbar-brand">🎬 FlickFuse</NavLink>
 
         <div className="navbar-links">
           <NavLink to="/dashboard"       className={({ isActive }) => `navbar-link${isActive ? ' active' : ''}`}>

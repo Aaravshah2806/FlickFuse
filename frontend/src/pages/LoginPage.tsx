@@ -31,7 +31,7 @@ export default function LoginPage() {
           <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🎬</div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '6px' }}>Welcome back</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
-            Sign in to your StreamSync account
+            Sign in to your FlickFuse account
           </p>
         </div>
 
