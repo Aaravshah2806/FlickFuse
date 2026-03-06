@@ -49,7 +49,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('ss_user', JSON.stringify(data.user));
       set({ user: data.user, token: data.accessToken, isLoading: false });
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Login failed';
+      const responseData = (err as { response?: { data?: { error?: string, detail?: string } } }).response?.data;
+      const msg = responseData?.error || responseData?.detail || 'Login failed';
       set({ error: msg, isLoading: false });
       throw err;
     }
@@ -63,7 +64,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('ss_user', JSON.stringify(data.user));
       set({ user: data.user, token: data.accessToken, isLoading: false });
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Registration failed';
+      const responseData = (err as { response?: { data?: { error?: string, detail?: string } } }).response?.data;
+      const msg = responseData?.error || responseData?.detail || 'Registration failed';
       set({ error: msg, isLoading: false });
       throw err;
     }

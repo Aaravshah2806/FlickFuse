@@ -16,7 +16,7 @@ class FriendRequestBody(BaseModel):
     uniqueId: str
 
 
-@router.get("/")
+@router.get("")
 async def get_friends(user_id: str = Depends(authenticate)):
     pool = get_pool()
 

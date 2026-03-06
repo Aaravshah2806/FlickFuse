@@ -51,7 +51,8 @@ export const useRecommendationsStore = create<RecommendationsState>((set, get) =
       await api.post('/api/recommendations/generate');
       await get().fetch();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to generate';
+      const responseData = (err as { response?: { data?: { error?: string, detail?: string } } }).response?.data;
+      const msg = responseData?.error || responseData?.detail || 'Failed to generate';
       set({ error: msg, isLoading: false });
     }
   },

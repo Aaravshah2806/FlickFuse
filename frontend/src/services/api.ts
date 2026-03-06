@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_API_URL || '',
 });
 
 // Attach JWT token from localStorage
@@ -17,7 +17,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    if (err.response?.status === 401 && !err.config.url?.includes('/api/auth/login') && !err.config.url?.includes('/api/auth/register')) {
       localStorage.removeItem('ss_access_token');
       localStorage.removeItem('ss_user');
       window.location.href = '/login';

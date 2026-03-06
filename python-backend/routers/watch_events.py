@@ -11,7 +11,7 @@ from middleware.auth import authenticate
 router = APIRouter(prefix="/api/watch-events", tags=["watch-events"])
 
 
-@router.get("/")
+@router.get("")
 async def get_watch_history(user_id: str = Depends(authenticate)):
     pool = get_pool()
     rows = await pool.fetch(

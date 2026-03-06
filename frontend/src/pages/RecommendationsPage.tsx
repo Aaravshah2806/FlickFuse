@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, RefreshCw, ThumbsDown, Check, BookmarkPlus } from 'lucide-react';
 import Layout from '../components/Layout';
@@ -24,8 +24,28 @@ function RecCard({ rec, onFeedback }: { rec: Recommendation; onFeedback: (id: st
 
   const platforms = rec.platforms || (rec.platform ? [rec.platform] : []);
 
+  // 3D tilt effect
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    card.style.transform = `perspective(600px) rotateX(${-y * 8}deg) rotateY(${x * 8}deg) translateY(-4px)`;
+    card.style.transition = 'transform 0.1s';
+  }, []);
+
+  const handleMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    card.style.transform = '';
+    card.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+  }, []);
+
   return (
-    <div className="poster-card" style={{ opacity: feedbackSent === 'not_interested' ? 0.4 : 1, transition: 'opacity 0.3s' }}>
+    <div className="poster-card"
+      style={{ opacity: feedbackSent === 'not_interested' ? 0.3 : 1, transition: 'opacity 0.3s' }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
       {rec.posterPath ? (
         <img src={`${TMDB_IMG}${rec.posterPath}`} alt={rec.title} className="poster-img"
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display='none'; }} />
@@ -35,22 +55,28 @@ function RecCard({ rec, onFeedback }: { rec: Recommendation; onFeedback: (id: st
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
           <div>
-            <h3 style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: '4px' }}>{rec.title}</h3>
+            <h3 style={{
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 700, fontSize: '1.05rem', marginBottom: '4px',
+              letterSpacing: '-0.5px',
+            }}>{rec.title}</h3>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {(rec.genres || []).slice(0, 3).map((g) => <span key={g} className="badge badge-genre" style={{ fontSize: '0.7rem' }}>{g}</span>)}
+              {(rec.genres || []).slice(0, 3).map((g) => <span key={g} className="badge badge-genre">{g}</span>)}
               {platforms.slice(0, 1).map((p) => <PlatformBadge key={String(p)} platform={String(p)} />)}
             </div>
           </div>
           <div style={{
-            background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)',
+            background: 'rgba(48,209,88,0.08)', border: '1px solid rgba(48,209,88,0.2)',
             borderRadius: 'var(--radius-full)', padding: '4px 12px',
-            fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-success)', whiteSpace: 'nowrap',
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '0.8rem', fontWeight: 700, color: '#30D158', whiteSpace: 'nowrap',
+            textShadow: '0 0 8px rgba(48,209,88,0.3)',
           }}>
             {rec.matchScore}% match
           </div>
         </div>
 
-        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', lineHeight: 1.6, marginBottom: '12px' }}>
+        <p style={{ color: '#8888AA', fontSize: '0.82rem', lineHeight: 1.6, marginBottom: '12px' }}>
           {rec.reason}
         </p>
 
@@ -61,10 +87,10 @@ function RecCard({ rec, onFeedback }: { rec: Recommendation; onFeedback: (id: st
           </button>
           <button onClick={() => handleFeedback('want_to_watch')}
             className={`btn btn-sm ${feedbackSent === 'want_to_watch' ? 'btn-secondary' : 'btn-ghost'}`}
-            style={feedbackSent === 'want_to_watch' ? { color: 'var(--color-accent)', borderColor: 'var(--color-accent)' } : {}}>
+            style={feedbackSent === 'want_to_watch' ? { color: '#00D4FF', borderColor: 'rgba(0,212,255,0.3)' } : {}}>
             <BookmarkPlus size={13} /> Watchlist
           </button>
-          <button onClick={() => handleFeedback('not_interested')} className="btn btn-ghost btn-sm" style={{ color: 'var(--color-error)', opacity: 0.7 }}>
+          <button onClick={() => handleFeedback('not_interested')} className="btn btn-ghost btn-sm" style={{ color: '#FF453A', opacity: 0.7 }}>
             <ThumbsDown size={13} /> Not for me
           </button>
         </div>
@@ -72,6 +98,13 @@ function RecCard({ rec, onFeedback }: { rec: Recommendation; onFeedback: (id: st
     </div>
   );
 }
+
+const FILTER_NEONS: Record<string, string> = {
+  all: '#00FF9F',
+  netflix: '#FF453A',
+  prime: '#00D4FF',
+  hotstar: '#FFD60A',
+};
 
 export default function RecommendationsPage() {
   const { recommendations, isLoading, fetch, generate, submitFeedback, source, error } = useRecommendationsStore();
@@ -90,8 +123,11 @@ export default function RecommendationsPage() {
     <Layout>
       <div className="page-content page-enter">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700 }}>
-            <Sparkles size={22} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px', color: 'var(--color-primary-light)' }} />
+          <h1 style={{
+            fontFamily: "'Syne', sans-serif",
+            fontSize: '1.75rem', fontWeight: 700, letterSpacing: '-0.5px',
+          }}>
+            <Sparkles size={22} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px', color: '#00FF9F', filter: 'drop-shadow(0 0 8px rgba(0,255,159,0.4))' }} />
             Recommendations For You
           </h1>
           <button onClick={generate} className="btn btn-primary btn-sm" disabled={isLoading}>
@@ -100,26 +136,33 @@ export default function RecommendationsPage() {
           </button>
         </div>
 
-        <p style={{ color: 'var(--color-text-muted)', marginBottom: '24px' }}>
-          Personalised picks based on your taste profile
+        <p style={{ color: '#8888AA', marginBottom: '24px', fontSize: '0.85rem' }}>
+          // personalised picks based on your taste profile
         </p>
 
         {/* Filters */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-          {filters.map((f) => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ textTransform: 'capitalize' }}>
-              {f === 'all' ? '⭐ All' : f === 'netflix' ? '🎬 Netflix' : f === 'prime' ? '📦 Prime' : '⭐ Hotstar'}
-            </button>
-          ))}
+          {filters.map((f) => {
+            const neon = FILTER_NEONS[f] || '#00FF9F';
+            return (
+              <button key={f} onClick={() => setFilter(f)}
+                className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-secondary'}`}
+                style={filter === f ? {
+                  background: `linear-gradient(135deg, ${neon}, ${neon}CC)`,
+                  boxShadow: `0 4px 16px ${neon}30`,
+                  color: '#02000D',
+                } : { textTransform: 'capitalize' }}>
+                {f === 'all' ? '⭐ All' : f === 'netflix' ? '🎬 Netflix' : f === 'prime' ? '📦 Prime' : '⭐ Hotstar'}
+              </button>
+            );
+          })}
         </div>
 
         {error && <div className="alert alert-error" style={{ marginBottom: '16px' }}>{error}</div>}
 
         {source === 'mock' && (
           <div className="alert alert-info" style={{ marginBottom: '16px' }}>
-            💡 Sample recommendations shown. <Link to="/import" style={{ color: 'var(--color-primary-light)', fontWeight: 600 }}>Import your watch history</Link> for personalised AI picks.
+            💡 Sample recommendations shown. <Link to="/import" style={{ color: '#00D4FF', fontWeight: 600 }}>Import your watch history</Link> for personalised AI picks.
           </div>
         )}
 

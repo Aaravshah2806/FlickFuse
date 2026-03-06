@@ -6,11 +6,9 @@ import api from '../services/api';
 type Platform = 'netflix' | 'prime' | 'hotstar';
 type Status = 'idle' | 'uploading' | 'success' | 'error';
 
-const PLATFORMS: { id: Platform; label: string; color: string; csvInfo: string; steps: string[] }[] = [
+const PLATFORMS: { id: Platform; label: string; neon: string; csvInfo: string; steps: string[] }[] = [
   {
-    id: 'netflix',
-    label: '🎬 Netflix',
-    color: 'var(--color-netflix)',
+    id: 'netflix', label: '🎬 Netflix', neon: '#FF453A',
     csvInfo: 'Columns expected: "Title", "Date"',
     steps: [
       'Go to netflix.com and log in',
@@ -21,9 +19,7 @@ const PLATFORMS: { id: Platform; label: string; color: string; csvInfo: string; 
     ],
   },
   {
-    id: 'prime',
-    label: '📦 Prime Video',
-    color: 'var(--color-prime)',
+    id: 'prime', label: '📦 Prime Video', neon: '#00D4FF',
     csvInfo: 'Columns expected: "Title", "WatchedDate"',
     steps: [
       'Go to Amazon Prime Video website',
@@ -34,9 +30,7 @@ const PLATFORMS: { id: Platform; label: string; color: string; csvInfo: string; 
     ],
   },
   {
-    id: 'hotstar',
-    label: '⭐ Hotstar',
-    color: 'var(--color-hotstar)',
+    id: 'hotstar', label: '⭐ Hotstar', neon: '#FFD60A',
     csvInfo: 'Columns expected: "Title", "Watch Date" or "Timestamp"',
     steps: [
       'Open Hotstar in a browser (hotstar.com)',
@@ -79,7 +73,6 @@ export default function ImportPage() {
     setProgress(0);
     setError(null);
 
-    // Simulate progress
     const progressTimer = setInterval(() => {
       setProgress((p) => Math.min(p + Math.random() * 20, 85));
     }, 200);
@@ -103,16 +96,26 @@ export default function ImportPage() {
   return (
     <Layout>
       <div className="page-content page-enter">
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '8px' }}>Import Watch History</h1>
-        <p style={{ color: 'var(--color-text-muted)', marginBottom: '32px' }}>
-          Export your viewing history from a streaming platform and upload it below.
+        <h1 style={{
+          fontFamily: "'Syne', sans-serif",
+          fontSize: '1.75rem', fontWeight: 700, marginBottom: '8px',
+          letterSpacing: '-0.5px',
+        }}>Import Watch History</h1>
+        <p style={{ color: '#8888AA', marginBottom: '32px', fontSize: '0.85rem' }}>
+          // export your viewing history from a streaming platform and upload it below
         </p>
 
         {/* Platform Tabs */}
-        <div className="tabs" style={{ marginBottom: '32px', maxWidth: '400px' }}>
+        <div className="tabs" style={{ marginBottom: '32px', maxWidth: '420px' }}>
           {PLATFORMS.map((p) => (
-            <button key={p.id} className={`tab${selectedPlatform === p.id ? ' active' : ''}`}
-              onClick={() => { setSelectedPlatform(p.id); setFile(null); setStatus('idle'); setResult(null); setError(null); }}>
+            <button key={p.id}
+              className={`tab${selectedPlatform === p.id ? ' active' : ''}`}
+              onClick={() => { setSelectedPlatform(p.id); setFile(null); setStatus('idle'); setResult(null); setError(null); }}
+              style={selectedPlatform === p.id ? {
+                background: `${p.neon}15`,
+                color: p.neon,
+                boxShadow: `0 0 12px ${p.neon}15`,
+              } : {}}>
               {p.label}
             </button>
           ))}
@@ -120,16 +123,29 @@ export default function ImportPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'start' }}>
           {/* Steps */}
-          <div className="card">
-            <h2 style={{ fontWeight: 700, marginBottom: '20px', color: platform.color }}>How to Export from {platform.label}</h2>
+          <div className="card" style={{ borderColor: `${platform.neon}15` }}>
+            <h2 style={{
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 700, marginBottom: '20px',
+              color: platform.neon,
+              textShadow: `0 0 12px ${platform.neon}30`,
+              letterSpacing: '-0.5px',
+            }}>How to Export from {platform.label}</h2>
             <ol style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {platform.steps.map((step, i) => (
-                <li key={i} style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+                <li key={i} style={{ color: '#8888AA', fontSize: '0.85rem', lineHeight: 1.6 }}>
                   {step}
                 </li>
               ))}
             </ol>
-            <div style={{ marginTop: '20px', padding: '12px', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', color: 'var(--color-text-faint)' }}>
+            <div style={{
+              marginTop: '20px', padding: '12px',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 'var(--radius-md)',
+              fontFamily: "'Space Mono', monospace",
+              fontSize: '0.75rem', color: '#3A3A52',
+            }}>
               📋 {platform.csvInfo}
             </div>
           </div>
@@ -146,18 +162,18 @@ export default function ImportPage() {
             >
               <input id="file-input" type="file" accept=".csv" style={{ display: 'none' }}
                 onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
-              <Upload size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
+              <Upload size={32} style={{ margin: '0 auto 12px', opacity: 0.4, color: platform.neon }} />
               {file ? (
                 <div>
-                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>{file.name}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                  <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 600, marginBottom: '4px' }}>{file.name}</div>
+                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '0.75rem', color: '#8888AA' }}>
                     {(file.size / 1024).toFixed(1)} KB · Click to change
                   </div>
                 </div>
               ) : (
                 <div>
-                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>Drag & drop your CSV here</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>or click to browse · max 50MB</div>
+                  <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 600, marginBottom: '4px' }}>Drag & drop your CSV here</div>
+                  <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '0.75rem', color: '#8888AA' }}>or click to browse · max 50MB</div>
                 </div>
               )}
             </div>
@@ -165,11 +181,15 @@ export default function ImportPage() {
             {/* Progress */}
             {status === 'uploading' && (
               <div style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.85rem' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> Processing…
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.8rem' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8888AA' }}>
+                    <Loader size={14} className="spinning" /> Processing…
                   </span>
-                  <span style={{ color: 'var(--color-primary-light)', fontWeight: 600 }}>{Math.round(progress)}%</span>
+                  <span style={{
+                    color: '#00FF9F', fontWeight: 700,
+                    fontFamily: "'Space Mono', monospace",
+                    textShadow: '0 0 8px rgba(0,255,159,0.3)',
+                  }}>{Math.round(progress)}%</span>
                 </div>
                 <div className="progress-bar">
                   <div className="progress-fill" style={{ width: `${progress}%` }} />
@@ -186,10 +206,19 @@ export default function ImportPage() {
 
             {/* Success */}
             {status === 'success' && result && (
-              <div className="card" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', marginBottom: '16px' }}>
+              <div className="card" style={{
+                background: 'rgba(48,209,88,0.04)',
+                border: '1px solid rgba(48,209,88,0.15)',
+                marginBottom: '16px',
+                boxShadow: '0 0 20px rgba(48,209,88,0.06)',
+              }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                  <CheckCircle size={20} color="var(--color-success)" />
-                  <span style={{ fontWeight: 700, color: 'var(--color-success)' }}>Import Complete!</span>
+                  <CheckCircle size={20} color="#30D158" />
+                  <span style={{
+                    fontFamily: "'Syne', sans-serif",
+                    fontWeight: 700, color: '#30D158',
+                    textShadow: '0 0 8px rgba(48,209,88,0.3)',
+                  }}>Import Complete!</span>
                 </div>
                 {[
                   { label: 'Total Rows', val: result.stats.totalRows },
@@ -197,24 +226,28 @@ export default function ImportPage() {
                   { label: 'Duplicates Skipped', val: result.stats.duplicates },
                   { label: 'Invalid Rows', val: result.stats.invalid },
                 ].map(({ label, val }) => (
-                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid var(--color-border)', fontSize: '0.875rem' }}>
-                    <span style={{ color: 'var(--color-text-muted)' }}>{label}</span>
-                    <span style={{ fontWeight: 700 }}>{val}</span>
+                  <div key={label} style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.04)',
+                    fontSize: '0.82rem',
+                  }}>
+                    <span style={{ color: '#8888AA', fontFamily: "'Space Mono', monospace" }}>{label}</span>
+                    <span style={{ fontWeight: 700, fontFamily: "'Space Mono', monospace" }}>{val}</span>
                   </div>
                 ))}
-                <p style={{ marginTop: '12px', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
-                  Your taste profile is being updated. Check Recommendations soon!
+                <p style={{ marginTop: '12px', fontSize: '0.8rem', color: '#8888AA' }}>
+                  // your taste profile is being updated. check recommendations soon!
                 </p>
               </div>
             )}
 
-            <button className="btn btn-primary btn-full" disabled={!file || status === 'uploading'} onClick={handleUpload}>
+            <button className="btn btn-primary btn-full" disabled={!file || status === 'uploading'} onClick={handleUpload}
+              style={file ? { boxShadow: `0 8px 32px ${platform.neon}25` } : {}}>
               {status === 'uploading' ? 'Uploading…' : `Upload ${platform.label} CSV`}
             </button>
           </div>
         </div>
       </div>
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </Layout>
   );
 }

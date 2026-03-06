@@ -12,6 +12,9 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from database import get_pool
 from middleware.auth import authenticate
+import random
+
+GENRE_POOL = ["Action", "Comedy", "Drama", "Sci-Fi", "Thriller", "Horror", "Romance", "Documentary", "Fantasy"]
 
 router = APIRouter(prefix="/api/import", tags=["import"])
 
@@ -29,10 +32,11 @@ async def _upsert_watch_event(pool, user_id: str, title: str, platform: str, wat
     row = await pool.fetchrow("SELECT id FROM content_catalog WHERE LOWER(title) = LOWER($1) LIMIT 1", title)
     if not row:
         # Use a list for text[] ARRAY column, not json.dumps
+        mock_genres = random.sample(GENRE_POOL, k=random.randint(1, 3))
         row = await pool.fetchrow(
-            """INSERT INTO content_catalog (title, platform_availability)
-               VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING id""",
-            title, [platform],
+            """INSERT INTO content_catalog (title, platform_availability, genres)
+               VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id""",
+            title, [platform], mock_genres,
         )
     if not row:
         row = await pool.fetchrow("SELECT id FROM content_catalog WHERE LOWER(title) = LOWER($1) LIMIT 1", title)

@@ -41,8 +41,15 @@ export default function FriendsPage() {
     <Layout>
       <div className="page-content page-enter">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, flex: 1 }}>
-            <Users size={22} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px', color: 'var(--color-primary-light)' }} />
+          <h1 style={{
+            fontFamily: "'Syne', sans-serif",
+            fontSize: '1.75rem', fontWeight: 700, flex: 1,
+            letterSpacing: '-0.5px',
+          }}>
+            <Users size={22} style={{
+              display: 'inline', verticalAlign: 'middle', marginRight: '8px',
+              color: '#BF5AF2', filter: 'drop-shadow(0 0 8px rgba(191,90,242,0.4))',
+            }} />
             Friends
           </h1>
         </div>
@@ -53,7 +60,11 @@ export default function FriendsPage() {
             My Friends ({friends.length})
           </button>
           <button className={`tab${tab === 'requests' ? ' active' : ''}`} onClick={() => setTab('requests')}>
-            Requests {requests.length > 0 && <span style={{ background: 'var(--color-error)', color: '#fff', borderRadius: '99px', padding: '1px 6px', fontSize: '0.7rem', marginLeft: '4px' }}>{requests.length}</span>}
+            Requests {requests.length > 0 && <span style={{
+              background: '#FF453A', color: '#fff', borderRadius: '99px',
+              padding: '1px 6px', fontSize: '0.65rem', marginLeft: '4px',
+              boxShadow: '0 0 8px rgba(255,69,58,0.4)',
+            }}>{requests.length}</span>}
           </button>
           <button className={`tab${tab === 'find' ? ' active' : ''}`} onClick={() => setTab('find')}>
             <Search size={13} /> Find
@@ -80,13 +91,19 @@ export default function FriendsPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {friends.map((f) => (
-                <div key={f.friendshipId} className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px' }}>
+                <div key={f.friendshipId} className="card" style={{
+                  display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px',
+                }}>
                   <div className="avatar avatar-md">{getInitials(f)}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, marginBottom: '2px' }}>{f.displayName || f.username}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-faint)', fontFamily: 'monospace' }}>{f.uniqueId}</div>
+                    <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, marginBottom: '2px' }}>{f.displayName || f.username}</div>
+                    <div style={{
+                      fontFamily: "'Space Mono', monospace",
+                      fontSize: '0.75rem', color: '#00FF9F',
+                      textShadow: '0 0 6px rgba(0,255,159,0.2)',
+                    }}>{f.uniqueId}</div>
                     <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-                      {getTopGenres(f).map(g => <span key={g} className="badge badge-genre" style={{ fontSize: '0.7rem' }}>{g}</span>)}
+                      {getTopGenres(f).map(g => <span key={g} className="badge badge-genre">{g}</span>)}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -114,9 +131,15 @@ export default function FriendsPage() {
                 <div key={req.requestId} className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px' }}>
                   <div className="avatar avatar-md">{getInitials(req)}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, marginBottom: '2px' }}>{req.displayName || req.username}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-faint)', fontFamily: 'monospace' }}>{req.uniqueId}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-faint)', marginTop: '2px' }}>
+                    <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, marginBottom: '2px' }}>{req.displayName || req.username}</div>
+                    <div style={{
+                      fontFamily: "'Space Mono', monospace",
+                      fontSize: '0.75rem', color: '#00D4FF',
+                    }}>{req.uniqueId}</div>
+                    <div style={{
+                      fontFamily: "'Space Mono', monospace",
+                      fontSize: '0.7rem', color: '#3A3A52', marginTop: '2px',
+                    }}>
                       <Clock size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
                       {new Date(req.requestedAt).toLocaleDateString()}
                     </div>
@@ -125,7 +148,7 @@ export default function FriendsPage() {
                     <button onClick={() => acceptRequest(req.requestId)} className="btn btn-primary btn-sm">
                       <CheckCircle size={14} /> Accept
                     </button>
-                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-error)' }}>
+                    <button className="btn btn-ghost btn-sm" style={{ color: '#FF453A' }}>
                       <XCircle size={14} />
                     </button>
                   </div>
@@ -137,17 +160,25 @@ export default function FriendsPage() {
 
         {/* Find Friends */}
         {tab === 'find' && (
-          <div className="card" style={{ maxWidth: '480px' }}>
-            <h2 style={{ fontWeight: 700, marginBottom: '8px' }}>Find by Unique ID</h2>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '20px' }}>
-              Ask your friend for their FlickFuse ID (format: ABC-12345)
+          <div className="card" style={{
+            maxWidth: '480px',
+            border: '1px solid rgba(191,90,242,0.12)',
+          }}>
+            <h2 style={{
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 700, marginBottom: '8px', letterSpacing: '-0.5px',
+            }}>Find by Unique ID</h2>
+            <p style={{ color: '#8888AA', fontSize: '0.82rem', marginBottom: '20px' }}>
+              // ask your friend for their FlickFuse ID (format: ABC-12345)
             </p>
 
             <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
               <input
                 className="input" placeholder="ABC-12345"
                 value={searchId} onChange={(e) => { setSearchId(e.target.value.toUpperCase()); setSearchStatus('idle'); setSearchResult(null); }}
-                style={{ fontFamily: "'Roboto Mono', monospace", letterSpacing: '0.1em', flex: 1 }}
+                style={{
+                  fontFamily: "'Space Mono', monospace", letterSpacing: '0.15em', flex: 1,
+                }}
                 maxLength={9}
               />
               <button className="btn btn-primary" onClick={handleSendRequest} disabled={searchId.length < 6 || searchStatus === 'loading'}>
@@ -162,7 +193,7 @@ export default function FriendsPage() {
             {searchStatus === 'sent' && searchResult && (
               <div className="alert alert-success">
                 <CheckCircle size={16} />
-                Friend request sent to <strong>{searchResult.username}</strong> ({searchResult.uniqueId})! 🎉
+                Friend request sent to <strong>{searchResult.username}</strong> ({searchResult.uniqueId})! ⚡
               </div>
             )}
           </div>

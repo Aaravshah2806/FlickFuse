@@ -28,7 +28,7 @@ class FeedbackBody(BaseModel):
     feedback: Literal["watched", "want_to_watch", "not_interested"]
 
 
-@router.get("/")
+@router.get("")
 async def get_recommendations(user_id: str = Depends(authenticate)):
     pool = get_pool()
     rows = await pool.fetch(

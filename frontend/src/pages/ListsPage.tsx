@@ -26,7 +26,7 @@ function CreateListModal({ onClose, onCreate }: { onClose: () => void; onCreate:
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontWeight: 700 }}>Create New List</h2>
+          <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, letterSpacing: '-0.5px' }}>Create New List</h2>
           <button onClick={onClose} className="btn btn-ghost btn-sm"><X size={18} /></button>
         </div>
 
@@ -38,7 +38,7 @@ function CreateListModal({ onClose, onCreate }: { onClose: () => void; onCreate:
 
           <div className="form-group">
             <label className="form-label">Description</label>
-            <textarea className="input" placeholder="Optional description…" value={desc} onChange={(e) => setDesc(e.target.value)}
+            <textarea className="input" placeholder="// optional description…" value={desc} onChange={(e) => setDesc(e.target.value)}
               style={{ resize: 'vertical', minHeight: '80px' }} maxLength={1000} />
           </div>
 
@@ -91,11 +91,18 @@ export default function ListsPage() {
       <div className="page-content page-enter">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '4px' }}>
-              <BookMarked size={22} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px', color: 'var(--color-primary-light)' }} />
+            <h1 style={{
+              fontFamily: "'Syne', sans-serif",
+              fontSize: '1.75rem', fontWeight: 700, marginBottom: '4px',
+              letterSpacing: '-0.5px',
+            }}>
+              <BookMarked size={22} style={{
+                display: 'inline', verticalAlign: 'middle', marginRight: '8px',
+                color: '#FFD60A', filter: 'drop-shadow(0 0 8px rgba(255,214,10,0.4))',
+              }} />
               My Lists
             </h1>
-            <p style={{ color: 'var(--color-text-muted)' }}>Curate and share your favourite watches</p>
+            <p style={{ color: '#8888AA', fontSize: '0.85rem' }}>// curate and share your favourite watches</p>
           </div>
           <button className="btn btn-primary" onClick={() => setShowModal(true)}>
             <Plus size={16} /> New List
@@ -122,31 +129,40 @@ export default function ListsPage() {
             {lists.map((list: UserList) => (
               <div key={list.id} className="card card-hover" style={{ position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
-                  <h3 style={{ fontWeight: 700, fontSize: '1.05rem', lineHeight: 1.3 }}>{list.title}</h3>
+                  <h3 style={{
+                    fontFamily: "'Syne', sans-serif",
+                    fontWeight: 700, fontSize: '1.05rem', lineHeight: 1.3, letterSpacing: '-0.3px',
+                  }}>{list.title}</h3>
                   <button onClick={() => handleDelete(list.id)} className="btn btn-ghost btn-sm"
-                    style={{ color: 'var(--color-error)', opacity: 0.7, flexShrink: 0 }} disabled={deleting === list.id}>
+                    style={{ color: '#FF453A', opacity: 0.7, flexShrink: 0 }} disabled={deleting === list.id}>
                     <Trash2 size={14} />
                   </button>
                 </div>
 
                 {list.description && (
-                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '12px', lineHeight: 1.6 }}>
+                  <p style={{ color: '#8888AA', fontSize: '0.82rem', marginBottom: '12px', lineHeight: 1.6 }}>
                     {list.description}
                   </p>
                 )}
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <span className="badge badge-genre" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}>
+                    <span className="badge badge-genre" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {VISIBILITY_ICONS[list.visibility]}
                     </span>
                     {list.item_count !== undefined && (
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-faint)' }}>
+                      <span style={{
+                        fontFamily: "'Space Mono', monospace",
+                        fontSize: '0.75rem', color: '#3A3A52',
+                      }}>
                         {list.item_count} {Number(list.item_count) === 1 ? 'title' : 'titles'}
                       </span>
                     )}
                   </div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-faint)' }}>
+                  <span style={{
+                    fontFamily: "'Space Mono', monospace",
+                    fontSize: '0.7rem', color: '#3A3A52',
+                  }}>
                     {formatDate(list.created_at)}
                   </span>
                 </div>

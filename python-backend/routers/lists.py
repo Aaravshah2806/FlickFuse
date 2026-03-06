@@ -35,7 +35,7 @@ class AddItemBody(BaseModel):
 
 
 # ─── Lists CRUD ───────────────────────────────────────────────────────────────
-@router.get("/")
+@router.get("")
 async def get_lists(user_id: str = Depends(authenticate)):
     pool = get_pool()
     rows = await pool.fetch(
@@ -49,7 +49,7 @@ async def get_lists(user_id: str = Depends(authenticate)):
     return {"lists": [dict(r) for r in rows]}
 
 
-@router.post("/", status_code=201)
+@router.post("", status_code=201)
 async def create_list(body: CreateListBody, user_id: str = Depends(authenticate)):
     if not body.title or len(body.title.strip()) == 0:
         raise HTTPException(status_code=400, detail="title is required")
