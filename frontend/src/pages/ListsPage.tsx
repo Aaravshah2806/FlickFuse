@@ -68,11 +68,11 @@ function CreateListModal({ onClose, onCreate }: { onClose: () => void; onCreate:
 }
 
 export default function ListsPage() {
-  const { lists, isLoading, fetchLists, createList, deleteList } = useListsStore();
+  const { lists, upNextListId, isLoading, fetchLists, fetchUpNext, createList, deleteList } = useListsStore();
   const [showModal, setShowModal] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  useEffect(() => { fetchLists(); }, []);
+  useEffect(() => { fetchLists(); fetchUpNext(); }, []);
 
   const handleCreate = async (title: string, desc: string, vis: string) => {
     await createList(title, desc, vis);
@@ -125,10 +125,33 @@ export default function ListsPage() {
             </div>
           </div>
         ) : (
-          <div className="grid-2">
-            {lists.map((list: UserList) => (
-              <div key={list.id} className="card card-hover" style={{ position: 'relative' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
+          <>
+            {/* UP NEXT LIST BANNER */}
+            {upNextListId && lists.find(l => l.id === upNextListId) && (
+              <div className="card" style={{ marginBottom: '24px', background: 'linear-gradient(135deg, rgba(0,212,255,0.1), transparent)', border: '1px solid rgba(0,212,255,0.3)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ background: '#00D4FF', padding: '12px', borderRadius: 'var(--radius-md)' }}>
+                      <BookMarked size={20} color="#02000D" />
+                    </div>
+                    <div>
+                      <h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '1.1rem', color: '#00D4FF' }}>Up Next</h3>
+                      <p style={{ color: '#8888AA', fontSize: '0.85rem', marginTop: '4px' }}>Your unified cross-platform watchlist</p>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="badge" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                      {lists.find(l => l.id === upNextListId)?.item_count || 0} items
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid-2">
+              {lists.filter(l => l.id !== upNextListId).map((list: UserList) => (
+                <div key={list.id} className="card card-hover" style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
                   <h3 style={{
                     fontFamily: "'Syne', sans-serif",
                     fontWeight: 700, fontSize: '1.05rem', lineHeight: 1.3, letterSpacing: '-0.3px',
@@ -168,7 +191,8 @@ export default function ListsPage() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
 

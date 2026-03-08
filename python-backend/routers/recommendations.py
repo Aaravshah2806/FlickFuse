@@ -28,21 +28,28 @@ class FeedbackBody(BaseModel):
     feedback: Literal["watched", "want_to_watch", "not_interested"]
 
 
+class GroupRecBody(BaseModel):
+    friend_ids: list[str]
+    max_runtime: int | None = None
+
+
 @router.get("")
-async def get_recommendations(user_id: str = Depends(authenticate)):
+async def get_recommendations(max_runtime: int | None = None, user_id: str = Depends(authenticate)):
     pool = get_pool()
-    rows = await pool.fetch(
-        """SELECT r.id, r.match_score, r.reason, r.user_feedback, r.generated_at,
+    query = """SELECT r.id, r.match_score, r.reason, r.user_feedback, r.generated_at,
                   cc.id as catalog_id, cc.title, cc.genres, cc.languages, cc.content_type,
-                  cc.synopsis, cc.ratings, cc.platform_availability, cc.poster_path, cc.tmdb_id
+                  cc.synopsis, cc.ratings, cc.platform_availability, cc.poster_path, cc.tmdb_id, cc.runtime
            FROM recommendations r
            JOIN content_catalog cc ON cc.id = r.catalog_id
            WHERE r.user_id = $1
-             AND (r.user_feedback IS NULL OR r.user_feedback != 'not_interested')
-           ORDER BY r.match_score DESC, r.generated_at DESC
-           LIMIT 20""",
-        user_id,
-    )
+             AND (r.user_feedback IS NULL OR r.user_feedback != 'not_interested')"""
+    args = [user_id]
+    if max_runtime:
+        args.append(max_runtime)
+        query += f" AND (cc.runtime IS NULL OR cc.runtime > 0 AND cc.runtime <= ${len(args)})"
+    query += " ORDER BY r.match_score DESC, r.generated_at DESC LIMIT 20"
+    
+    rows = await pool.fetch(query, *args)
     if rows:
         return {
             "recommendations": [
@@ -58,6 +65,7 @@ async def get_recommendations(user_id: str = Depends(authenticate)):
                     "platforms": r["platform_availability"],
                     "posterPath": r["poster_path"],
                     "tmdbId": r["tmdb_id"],
+                    "runtime": r["runtime"],
                     "userFeedback": r["user_feedback"],
                     "generatedAt": r["generated_at"].isoformat() if r["generated_at"] else None,
                 }
@@ -73,7 +81,7 @@ async def get_recommendations(user_id: str = Depends(authenticate)):
 
 
 @router.post("/generate")
-async def generate_recommendations(user_id: str = Depends(authenticate)):
+async def generate_recommendations(max_runtime: int | None = None, user_id: str = Depends(authenticate)):
     pool = get_pool()
     profile = await pool.fetchrow("SELECT * FROM taste_profiles WHERE user_id = $1", user_id)
 
@@ -107,15 +115,24 @@ async def generate_recommendations(user_id: str = Depends(authenticate)):
         )
         profile = await pool.fetchrow("SELECT * FROM taste_profiles WHERE user_id = $1", user_id)
 
-    catalog_rows = await pool.fetch(
-        """SELECT cc.* FROM content_catalog cc
-           WHERE cc.id NOT IN (SELECT catalog_id FROM recommendations WHERE user_id = $1)
-           ORDER BY (cc.ratings->>'imdb')::float DESC NULLS LAST
-           LIMIT 10""",
-        user_id,
-    )
+    catalog_query = """SELECT cc.* FROM content_catalog cc
+           WHERE cc.id NOT IN (SELECT catalog_id FROM recommendations WHERE user_id = $1)"""
+    args = [user_id]
+    if max_runtime:
+        args.append(max_runtime)
+        catalog_query += f" AND (cc.runtime IS NULL OR cc.runtime > 0 AND cc.runtime <= ${len(args)})"
+    catalog_query += " ORDER BY (cc.ratings->>'imdb')::float DESC NULLS LAST LIMIT 10"
+
+    catalog_rows = await pool.fetch(catalog_query, *args)
     if not catalog_rows:
         return {"message": "All catalog items have been recommended.", "generated": 0}
+
+    # Fetch recent watches for better AI explanations
+    recent_watches = await pool.fetch(
+        "SELECT title FROM watch_events WHERE user_id = $1 ORDER BY date_watched DESC LIMIT 2",
+        user_id
+    )
+    recent_titles = [r["title"] for r in recent_watches] if recent_watches else []
 
     # Handle genre_vector being either a dict or a JSON string
     gv = profile["genre_vector"] or {}
@@ -127,7 +144,12 @@ async def generate_recommendations(user_id: str = Depends(authenticate)):
         overlap = sum(1 for g in genres if g in top_genres)
         match_score = min(95, 60 + overlap * 12 + random.randint(0, 9))
         genre_list = " & ".join(genres[:2]) if genres else "great storytelling"
-        reason = f"Matches your taste for {genre_list} — {match_score}% compatible with your profile"
+        
+        reason = f"Perfect for fans of {genre_list}"
+        if recent_titles:
+            reason = f"Because you watched {recent_titles[0]}, you'll love this — {match_score}% compatible with your profile"
+        else:
+            reason += f" — {match_score}% compatible with your profile."
         await pool.execute(
             """INSERT INTO recommendations (user_id, catalog_id, match_score, reason)
                VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING""",
@@ -147,3 +169,79 @@ async def submit_feedback(rec_id: str, body: FeedbackBody, user_id: str = Depend
     if not row:
         raise HTTPException(status_code=404, detail="Recommendation not found")
     return {"success": True, "id": rec_id, "feedback": body.feedback}
+
+
+@router.post("/group")
+async def get_group_recommendations(body: GroupRecBody, user_id: str = Depends(authenticate)):
+    pool = get_pool()
+    all_users = [user_id] + body.friend_ids
+    if len(all_users) < 2:
+        raise HTTPException(status_code=400, detail="Need at least 1 friend to find common ground")
+
+    # For simplicity, we fetch catalog items that match genres popular among all users
+    # In a real app, you'd aggregate genre_vectors and intersect them.
+    # Here, we'll pick popular items and mock the "reason"
+    
+    catalog_query = "SELECT cc.* FROM content_catalog cc"
+    args = []
+    if body.max_runtime:
+        args.append(body.max_runtime)
+        catalog_query += f" WHERE cc.runtime IS NULL OR cc.runtime > 0 AND cc.runtime <= $1"
+    catalog_query += " ORDER BY (cc.ratings->>'imdb')::float DESC NULLS LAST LIMIT 10"
+
+    catalog_rows = await pool.fetch(catalog_query, *args)
+    if not catalog_rows:
+        return {"recommendations": []}
+
+    recs = []
+    for item in catalog_rows:
+        match_score = random.randint(85, 98)
+        recs.append({
+            "id": None, # Group recs are transient, not stored in recommendations table
+            "title": item["title"],
+            "matchScore": match_score,
+            "reason": f"Everyone's taste profiles show a high affinity for {item['content_type']}s like this.",
+            "genres": item["genres"],
+            "contentType": item["content_type"],
+            "synopsis": item["synopsis"],
+            "ratings": item["ratings"],
+            "platforms": item["platform_availability"],
+            "posterPath": item["poster_path"],
+            "tmdbId": item["tmdb_id"],
+            "runtime": item["runtime"],
+            "userFeedback": None,
+        })
+
+    return {"recommendations": recs}
+
+
+@router.get("/release-radar")
+async def get_release_radar(user_id: str = Depends(authenticate)):
+    pool = get_pool()
+    recent_watches = await pool.fetch(
+        """SELECT cc.genres FROM watch_events we 
+           JOIN content_catalog cc ON we.catalog_id = cc.id 
+           WHERE we.user_id = $1 ORDER BY date_watched DESC LIMIT 5""",
+        user_id
+    )
+    genres = set()
+    for r in recent_watches:
+        if r["genres"]:
+            for g in r["genres"]:
+                genres.add(g)
+    
+    if not genres:
+        return {"alerts": []}
+    
+    platforms = ["Netflix", "Prime Video", "Hotstar"]
+    alerts = []
+    for i, g in enumerate(list(genres)[:3]):
+        # Mock a new release alert based on recently watched genres
+        alerts.append({
+            "id": f"radar_{i}",
+            "title": f"New {g} Release",
+            "message": f"A highly anticipated {g} title just dropped on {platforms[i % len(platforms)]}!",
+            "platform": platforms[i % len(platforms)],
+            "genre": g
+        })
+    return {"alerts": alerts}

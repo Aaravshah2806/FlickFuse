@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Copy, Plus, RefreshCw, UserPlus, Settings, TrendingUp, Clock } from 'lucide-react';
+import { Copy, Plus, RefreshCw, UserPlus, Settings, TrendingUp, Clock, Bell } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useRecommendationsStore } from '../store/recommendationsStore';
 import Layout from '../components/Layout';
@@ -29,10 +29,10 @@ const ACTION_NEONS = {
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const { recommendations, fetch, isLoading, source } = useRecommendationsStore();
+  const { recommendations, fetch, fetchReleaseRadar, alerts, isLoading, source } = useRecommendationsStore();
   const navigate = useNavigate();
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetch(); fetchReleaseRadar(); }, []);
 
   const copyId = () => {
     if (user?.uniqueId) {
@@ -194,6 +194,36 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* Release Radar */}
+        {alerts && alerts.length > 0 && (
+          <div style={{ marginBottom: '40px' }}>
+            <div className="section-header">
+              <h2 className="section-title">
+                <Bell size={18} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px', color: '#FF453A' }} />
+                Release Radar alerts
+              </h2>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {alerts.map((alert: any) => (
+                <div key={alert.id} className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', padding: '16px 20px', borderLeft: '4px solid #FF453A' }}>
+                  <div style={{ background: 'rgba(255,69,58,0.1)', padding: '12px', borderRadius: '50%' }}>
+                    <Bell size={20} color="#FF453A" />
+                  </div>
+                  <div>
+                    <h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '1rem', marginBottom: '4px' }}>
+                      {alert.title} <span className="badge badge-genre" style={{ marginLeft: '8px' }}>{alert.genre}</span>
+                    </h3>
+                    <p style={{ color: '#8888AA', fontSize: '0.85rem' }}>{alert.message}</p>
+                    <div style={{ marginTop: '8px' }}>
+                      <PlatformBadge platform={alert.platform} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Recent Activity */}
         <div>

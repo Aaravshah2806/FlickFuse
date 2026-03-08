@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, Users, Clock, Search, CheckCircle, XCircle } from 'lucide-react';
+import { UserPlus, Users, Clock, Search, CheckCircle, XCircle, Activity, Sparkles } from 'lucide-react';
 import Layout from '../components/Layout';
-import { useFriendsStore, Friend, FriendRequest } from '../store/friendsStore';
+import { useFriendsStore, Friend, FeedEvent } from '../store/friendsStore';
+import { useRecommendationsStore } from '../store/recommendationsStore';
 
-function getInitials(f: Friend | FriendRequest) {
-  const name = ('displayName' in f && f.displayName) ? f.displayName : f.username;
+function getInitials(f: { username: string; displayName?: string }) {
+  const name = f.displayName || f.username;
   return String(name || 'U')[0].toUpperCase();
 }
 
@@ -14,14 +15,17 @@ function getTopGenres(f: Friend): string[] {
 }
 
 export default function FriendsPage() {
-  const { friends, requests, isLoading, fetchFriends, fetchRequests, sendRequest, acceptRequest, removeFriend } = useFriendsStore();
-  const [tab, setTab] = useState<'friends' | 'requests' | 'find'>('friends');
+  const { friends, requests, feed, isLoading, fetchFriends, fetchRequests, fetchFeed, sendRequest, acceptRequest, removeFriend } = useFriendsStore();
+  const { recommendations, isLoading: recsLoading, groupGenerate } = useRecommendationsStore();
+  
+  const [tab, setTab] = useState<'feed' | 'friends' | 'requests' | 'find'>('feed');
   const [searchId, setSearchId] = useState('');
   const [searchResult, setSearchResult] = useState<{ username: string; uniqueId: string } | null>(null);
   const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [showGroupModal, setShowGroupModal] = useState(false);
 
-  useEffect(() => { fetchFriends(); fetchRequests(); }, []);
+  useEffect(() => { fetchFriends(); fetchRequests(); fetchFeed(); }, []);
 
   const handleSendRequest = async () => {
     if (!searchId.trim()) return;
@@ -55,7 +59,10 @@ export default function FriendsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="tabs" style={{ maxWidth: '380px', marginBottom: '28px' }}>
+        <div className="tabs" style={{ maxWidth: '480px', marginBottom: '28px' }}>
+          <button className={`tab${tab === 'feed' ? ' active' : ''}`} onClick={() => setTab('feed')}>
+            <Activity size={13} /> Feed
+          </button>
           <button className={`tab${tab === 'friends' ? ' active' : ''}`} onClick={() => setTab('friends')}>
             My Friends ({friends.length})
           </button>
@@ -70,6 +77,41 @@ export default function FriendsPage() {
             <Search size={13} /> Find
           </button>
         </div>
+
+        {/* Feed Tab */}
+        {tab === 'feed' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {feed.length === 0 ? (
+              <div className="card">
+                <div className="empty-state">
+                  <div className="empty-state-icon">🤫</div>
+                  <div className="empty-state-title">Quiet out here...</div>
+                  <div className="empty-state-desc">When your friends watch something and react to it, it will show up here spoiler-free!</div>
+                </div>
+              </div>
+            ) : (
+              feed.map((event: FeedEvent) => (
+                <div key={event.id} className="card" style={{ padding: '16px 20px', borderLeft: '4px solid #BF5AF2' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <div className="avatar avatar-sm">{getInitials(event.friend)}</div>
+                    <div>
+                      <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700 }}>{event.friend.displayName || event.friend.username}</span>
+                      <span style={{ color: '#8888AA', fontSize: '0.82rem', marginLeft: '6px' }}>just finished</span>
+                    </div>
+                  </div>
+                  <div style={{ paddingLeft: '44px' }}>
+                    <div style={{ fontFamily: "'Space Mono', monospace", color: '#00FF9F', marginBottom: '8px' }}>
+                      "{event.title}" &nbsp;({event.platform})
+                    </div>
+                    <p style={{ color: '#EAEAEA', fontSize: '0.9rem', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {event.reaction}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
         {/* My Friends */}
         {tab === 'friends' && (
@@ -89,7 +131,19 @@ export default function FriendsPage() {
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => {
+                    groupGenerate(friends.map(f => f.friendId));
+                    setShowGroupModal(true);
+                  }}
+                >
+                  <Sparkles size={16} /> Find Common Ground
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {friends.map((f) => (
                 <div key={f.friendshipId} className="card" style={{
                   display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px',
@@ -111,6 +165,7 @@ export default function FriendsPage() {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           )
         )}
@@ -196,6 +251,36 @@ export default function FriendsPage() {
                 Friend request sent to <strong>{searchResult.username}</strong> ({searchResult.uniqueId})! ⚡
               </div>
             )}
+          </div>
+        )}
+
+        {/* Group Info Modal */}
+        {showGroupModal && (
+          <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowGroupModal(false)}>
+            <div className="modal" style={{ maxWidth: '600px', width: '90%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700 }}>Watch Together Picks 🍿</h2>
+                <button onClick={() => setShowGroupModal(false)} className="btn btn-ghost btn-sm"><XCircle size={18} /></button>
+              </div>
+              {recsLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#8888AA' }}>Finding common ground...</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {recommendations.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#8888AA' }}>No common shows found. Try importing more history!</div>
+                  ) : (
+                    recommendations.map((rec) => (
+                      <div key={rec.id || rec.title} className="card" style={{ padding: '16px', display: 'flex', gap: '12px' }}>
+                        <div>
+                          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.05rem', fontWeight: 700 }}>{rec.title}</div>
+                          <div style={{ fontSize: '0.82rem', color: '#8888AA', marginTop: '6px' }}>{rec.reason}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

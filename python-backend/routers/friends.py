@@ -62,6 +62,44 @@ async def get_friends(user_id: str = Depends(authenticate)):
     return {"friends": all_friends, "count": len(all_friends)}
 
 
+@router.get("/feed")
+async def get_social_feed(user_id: str = Depends(authenticate)):
+    pool = get_pool()
+    rows = await pool.fetch(
+        """SELECT we.id, we.date_watched, we.reaction, we.platform,
+                  cc.title, cc.poster_path,
+                  u.id as friend_id, u.username, u.display_name, u.profile_picture_url
+           FROM friendships f
+           JOIN watch_events we ON we.user_id = CASE WHEN f.user_id = $1 THEN f.friend_id ELSE f.user_id END
+           JOIN users u ON u.id = we.user_id
+           JOIN content_catalog cc ON cc.id = we.catalog_id
+           WHERE (f.user_id = $1 OR f.friend_id = $1) AND f.status = 'accepted'
+             AND we.reaction IS NOT NULL
+           ORDER BY we.date_watched DESC
+           LIMIT 20""",
+        user_id,
+    )
+    return {
+        "feed": [
+            {
+                "id": str(r["id"]),
+                "watchedAt": r["date_watched"].isoformat() if r["date_watched"] else None,
+                "reaction": r["reaction"],
+                "platform": r["platform"],
+                "title": r["title"],
+                "posterPath": r["poster_path"],
+                "friend": {
+                    "id": str(r["friend_id"]),
+                    "username": r["username"],
+                    "displayName": r["display_name"],
+                    "profilePictureUrl": r["profile_picture_url"],
+                }
+            }
+            for r in rows
+        ]
+    }
+
+
 @router.post("/request", status_code=201)
 async def send_friend_request(body: FriendRequestBody, user_id: str = Depends(authenticate)):
     pool = get_pool()

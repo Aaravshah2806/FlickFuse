@@ -21,13 +21,25 @@ export interface FriendRequest {
   requestedAt: string;
 }
 
+export interface FeedEvent {
+  id: string;
+  watchedAt: string;
+  reaction: string;
+  platform: string;
+  title: string;
+  posterPath: string;
+  friend: { id: string; username: string; displayName: string; profilePictureUrl: string; };
+}
+
 interface FriendsState {
   friends: Friend[];
   requests: FriendRequest[];
+  feed: FeedEvent[];
   isLoading: boolean;
   error: string | null;
   fetchFriends: () => Promise<void>;
   fetchRequests: () => Promise<void>;
+  fetchFeed: () => Promise<void>;
   sendRequest: (uniqueId: string) => Promise<{ username: string; uniqueId: string }>;
   acceptRequest: (requestId: string) => Promise<void>;
   removeFriend: (friendshipId: string) => Promise<void>;
@@ -36,6 +48,7 @@ interface FriendsState {
 export const useFriendsStore = create<FriendsState>((set, get) => ({
   friends: [],
   requests: [],
+  feed: [],
   isLoading: false,
   error: null,
 
@@ -51,6 +64,13 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     try {
       const { data } = await api.get('/api/friends/requests');
       set({ requests: data.requests });
+    } catch { /* silent */ }
+  },
+
+  fetchFeed: async () => {
+    try {
+      const { data } = await api.get('/api/friends/feed');
+      set({ feed: data.feed });
     } catch { /* silent */ }
   },
 

@@ -109,8 +109,9 @@ const FILTER_NEONS: Record<string, string> = {
 export default function RecommendationsPage() {
   const { recommendations, isLoading, fetch, generate, submitFeedback, source, error } = useRecommendationsStore();
   const [filter, setFilter] = useState<string>('all');
+  const [maxRuntime, setMaxRuntime] = useState<number | undefined>(undefined);
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetch(maxRuntime); }, [maxRuntime]);
 
   const filters = ['all', 'netflix', 'prime', 'hotstar'];
 
@@ -130,7 +131,7 @@ export default function RecommendationsPage() {
             <Sparkles size={22} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px', color: '#00FF9F', filter: 'drop-shadow(0 0 8px rgba(0,255,159,0.4))' }} />
             Recommendations For You
           </h1>
-          <button onClick={generate} className="btn btn-primary btn-sm" disabled={isLoading}>
+          <button onClick={() => generate(maxRuntime)} className="btn btn-primary btn-sm" disabled={isLoading}>
             <RefreshCw size={15} className={isLoading ? 'spinning' : ''} />
             {isLoading ? 'Generating…' : 'Refresh'}
           </button>
@@ -141,7 +142,7 @@ export default function RecommendationsPage() {
         </p>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
           {filters.map((f) => {
             const neon = FILTER_NEONS[f] || '#00FF9F';
             return (
@@ -156,6 +157,21 @@ export default function RecommendationsPage() {
               </button>
             );
           })}
+          
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label style={{ fontSize: '0.8rem', color: '#8888AA', fontFamily: "'Space Mono', monospace" }}>Time:</label>
+            <select 
+              className="input" 
+              style={{ padding: '4px 12px', fontSize: '0.8rem', height: 'auto', minHeight: '32px' }}
+              value={maxRuntime || ''} 
+              onChange={(e) => setMaxRuntime(e.target.value ? Number(e.target.value) : undefined)}
+            >
+              <option value="">Any Runtime</option>
+              <option value="30">Under 30 mins</option>
+              <option value="60">Under 60 mins</option>
+              <option value="120">Under 2 hours</option>
+            </select>
+          </div>
         </div>
 
         {error && <div className="alert alert-error" style={{ marginBottom: '16px' }}>{error}</div>}

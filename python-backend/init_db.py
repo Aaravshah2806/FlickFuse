@@ -69,6 +69,7 @@ async def init_db():
             tmdb_id VARCHAR(100),
             ratings JSONB,
             platform_availability TEXT[],
+            runtime INT DEFAULT 0,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             UNIQUE(title)
@@ -92,6 +93,7 @@ async def init_db():
             title VARCHAR(255),
             date_watched TIMESTAMP WITH TIME ZONE,
             progress_percent INT,
+            reaction VARCHAR(50),
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             UNIQUE(user_id, catalog_id)
         );
@@ -108,6 +110,15 @@ async def init_db():
             UNIQUE(user_id, catalog_id)
         );
     """)
+
+    print("Checking and adding new columns if needed...")
+    try:
+        await conn.execute("""
+            ALTER TABLE content_catalog ADD COLUMN IF NOT EXISTS runtime INT DEFAULT 0;
+            ALTER TABLE watch_events ADD COLUMN IF NOT EXISTS reaction VARCHAR(50);
+        """)
+    except Exception as e:
+        print(f"Notes on alter table: {e}")
 
     # Function to auto-generate unique id like ABC-12345
     await conn.execute("""

@@ -3,7 +3,8 @@ routers/watch_events.py — GET /api/watch-events/
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from database import get_pool
 from middleware.auth import authenticate
@@ -41,3 +42,18 @@ async def get_watch_history(user_id: str = Depends(authenticate)):
             for r in rows
         ]
     }
+
+
+class ReactionBody(BaseModel):
+    reaction: str
+
+@router.post("/{event_id}/reaction")
+async def add_reaction(event_id: str, body: ReactionBody, user_id: str = Depends(authenticate)):
+    pool = get_pool()
+    row = await pool.fetchrow(
+        "UPDATE watch_events SET reaction = $1 WHERE id = $2 AND user_id = $3 RETURNING id",
+        body.reaction, event_id, user_id
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Watch event not found")
+    return {"success": True, "reaction": body.reaction}

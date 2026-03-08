@@ -49,6 +49,21 @@ async def get_lists(user_id: str = Depends(authenticate)):
     return {"lists": [dict(r) for r in rows]}
 
 
+@router.get("/up-next")
+async def get_up_next_list(user_id: str = Depends(authenticate)):
+    pool = get_pool()
+    row = await pool.fetchrow(
+        "SELECT * FROM user_lists WHERE user_id = $1 AND title = 'Up Next'", user_id
+    )
+    if not row:
+        row = await pool.fetchrow(
+            """INSERT INTO user_lists (user_id, title, description, visibility)
+               VALUES ($1, 'Up Next', 'My unified watchlist', 'private') RETURNING *""",
+            user_id
+        )
+    return {"list": dict(row)}
+
+
 @router.post("", status_code=201)
 async def create_list(body: CreateListBody, user_id: str = Depends(authenticate)):
     if not body.title or len(body.title.strip()) == 0:

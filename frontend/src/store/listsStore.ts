@@ -14,9 +14,11 @@ export interface UserList {
 
 interface ListsState {
   lists: UserList[];
+  upNextListId: string | null;
   isLoading: boolean;
   error: string | null;
   fetchLists: () => Promise<void>;
+  fetchUpNext: () => Promise<void>;
   createList: (title: string, description: string, visibility: string) => Promise<UserList>;
   updateList: (id: string, updates: Partial<UserList>) => Promise<void>;
   deleteList: (id: string) => Promise<void>;
@@ -24,6 +26,7 @@ interface ListsState {
 
 export const useListsStore = create<ListsState>((set) => ({
   lists: [],
+  upNextListId: null,
   isLoading: false,
   error: null,
 
@@ -33,6 +36,13 @@ export const useListsStore = create<ListsState>((set) => ({
       const { data } = await api.get('/api/lists');
       set({ lists: data.lists, isLoading: false });
     } catch { set({ error: 'Failed to load lists', isLoading: false }); }
+  },
+
+  fetchUpNext: async () => {
+    try {
+      const { data } = await api.get('/api/lists/up-next');
+      set({ upNextListId: data.list.id });
+    } catch { /* silent */ }
   },
 
   createList: async (title, description, visibility) => {
