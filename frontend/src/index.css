@@ -1,70 +1,57 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
-/* ─── CSS Variables: THE ELECTRIC — Neon Underground ──────────── */
 :root {
-  /* Ash & Ghost Base */
-  --color-bg:            #0E0E12;
-  --color-bg-card:       #1E1E2A;
-  --color-bg-elevated:   #2A2A3C;
-  --color-bg-hover:      #32324A;
-  --color-bg-void:       #02000D;
+  /* Premium Dark Tech Base */
+  --color-bg:            #09090B;
+  --color-bg-card:       #121217;
+  --color-bg-elevated:   #1A1A22;
+  --color-bg-hover:      #22222C;
+  --color-bg-void:       #000000;
 
-  /* Neon Riot — Genre-Mapped Accents */
-  --color-accent:        #00FF9F;
-  --neon-thriller:       #00FF9F;
-  --neon-scifi:          #00D4FF;
-  --neon-fantasy:        #BF5AF2;
-  --neon-horror:         #FF453A;
-  --neon-comedy:         #FFD60A;
-  --neon-romance:        #FF2D78;
-  --neon-doc:            #30D158;
-
-  /* Text — Ghost Scale */
-  --color-text:          #E0E0F0;
-  --color-text-muted:    #8888AA;
-  --color-text-faint:    #3A3A52;
+  /* Design Tokens from Stitch */
+  --color-accent:        #00FF9D;
+  --neon-primary:        #00FF9D;
+  --neon-secondary:      #00D4FF;
+  
+  /* Text */
+  --color-text:          #FAFAFA;
+  --color-text-muted:    #A1A1AA;
+  --color-text-faint:    #3F3F46;
 
   /* Borders */
   --color-border:        rgba(255,255,255,0.06);
-  --color-border-focus:  rgba(0,255,159,0.5);
+  --color-border-focus:  rgba(0,255,157,0.5);
 
-  /* Semantic — Neon-Mapped */
-  --color-success:       #30D158;
-  --color-warning:       #FFD60A;
-  --color-error:         #FF453A;
-  --color-primary:       #00FF9F;
-  --color-primary-dark:  #00CC7F;
-  --color-primary-light: #00FF9F;
+  /* Semantic */
+  --color-success:       #10B981;
+  --color-warning:       #F59E0B;
+  --color-error:         #EF4444;
+  --color-primary:       #00FF9D;
 
-  /* Platform Colors — Neon-Mapped */
-  --color-netflix:       #FF453A;
-  --color-prime:         #00D4FF;
-  --color-hotstar:       #FFD60A;
+  /* Shadows & Glows */
+  --shadow-sm:  0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg:  0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 15px rgba(0, 255, 157, 0.1);
 
-  /* Shadows — Neon Glow */
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.6);
-  --shadow-md:  0 4px 12px rgba(0,0,0,0.7);
-  --shadow-lg:  0 8px 32px rgba(0,0,0,0.8);
-  --shadow-glow: 0 0 20px rgba(0,255,159,0.15);
-  --shadow-neon: 0 0 30px rgba(0,255,159,0.2), 0 0 60px rgba(0,255,159,0.1);
-
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* Radius: Sharp & Modern */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
   --radius-full: 9999px;
-
-  /* Spacing */
-  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;
-  --space-4: 16px;  --space-5: 20px;  --space-6: 24px;
-  --space-8: 32px;  --space-10: 40px; --space-12: 48px;
-  --space-16: 64px;
 
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 400ms cubic-bezier(0.23, 1, 0.32, 1);
+  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ─── Reset ─────────────────────────────────────────────────────── */
