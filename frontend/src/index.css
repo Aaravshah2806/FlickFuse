@@ -10,8 +10,8 @@
 
   /* Design Tokens from Stitch */
   --color-accent:        #00FF9D;
-  --neon-primary:        #00FF9D;
-  --neon-secondary:      #00D4FF;
+  --color-primary:       #00FF9D;
+  --color-secondary:     #00D4FF;
   
   /* Text */
   --color-text:          #FAFAFA;
@@ -133,7 +133,9 @@ input, textarea, select { font-family: inherit; }
   font-size: 1.3rem; font-weight: 800;
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, #00FF9F, #00D4FF);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   white-space: nowrap;
   filter: drop-shadow(0 0 12px rgba(0,255,159,0.3));
 }
@@ -459,6 +461,28 @@ input, textarea, select { font-family: inherit; }
   box-shadow: 0 0 12px rgba(0,255,159,0.1);
 }
 .tab:hover:not(.active) { color: var(--color-text); }
+
+/* ─── Bento Grid ────────────────────────────────────────────────── */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(160px, auto);
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .bento-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+}
 
 /* ─── Grid ──────────────────────────────────────────────────────── */
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }

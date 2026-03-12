@@ -36,13 +36,7 @@ export default function DashboardPage() {
     <Layout>
       <div className="page-content page-enter">
         {/* Bento Grid Header Area */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(12, 1fr)', 
-          gridAutoRows: 'minmax(160px, auto)',
-          gap: '24px',
-          marginBottom: '40px'
-        }}>
+        <div className="bento-grid" style={{ marginBottom: '40px' }}>
           
           {/* Welcome Card (Main Bento) */}
           <div className="card" style={{
@@ -63,7 +57,7 @@ export default function DashboardPage() {
               Welcome back, <br/>{user?.displayName || user?.username}!
             </h1>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '1rem', maxWidth: '400px', lineHeight: 1.6 }}>
-              Your taste profile is synchronized. You have {recommendations.length} new recommendations waiting for you.
+              Your taste profile is synchronized. {isLoading ? 'Gathering fresh picks for you...' : `You have ${recommendations.length} new recommendations waiting.`}
             </p>
           </div>
 
@@ -158,7 +152,9 @@ export default function DashboardPage() {
                       padding: '20px'
                     }}>
                       <div className="match-score" style={{ marginBottom: '8px' }}>
-                        <span className="badge badge-success" style={{ background: 'var(--color-success)', color: 'white' }}>{rec.matchScore}% Match</span>
+                        <span className="badge badge-success" style={{ background: 'var(--color-success)', color: 'white' }}>
+                          {rec.matchScore !== undefined ? `${rec.matchScore}% Match` : 'New Match'}
+                        </span>
                       </div>
                       <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '4px' }}>{rec.title}</h3>
                       <div style={{ display: 'flex', gap: '6px' }}>
@@ -176,7 +172,7 @@ export default function DashboardPage() {
         <div style={{ marginBottom: '48px' }}>
           <div className="section-header">
             <h2 className="section-title">
-              <Clock size={20} style={{ marginRight: '12px', color: 'var(--neon-secondary)' }} />
+              <Clock size={20} style={{ marginRight: '12px', color: 'var(--color-secondary)' }} />
               Recently Watched
             </h2>
           </div>
