@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { useAuthStore } from './store/authStore';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -15,11 +16,18 @@ import ListsPage           from './pages/ListsPage';
 import SettingsPage        from './pages/SettingsPage';
 
 function App() {
-  const { loadFromStorage } = useAuthStore();
+  const { isSignedIn, getToken, userId } = useAuth();
+  const { syncFromClerk, clearUser } = useAuthStore();
 
+  // Sync Clerk auth state with our backend
   useEffect(() => {
-    loadFromStorage();
-  }, []);
+    if (isSignedIn && userId) {
+      registerTokenProvider(getToken);
+      syncFromClerk(userId, getToken);
+    } else if (isSignedIn === false) {
+      clearUser();
+    }
+  }, [isSignedIn, userId, getToken]);
 
   return (
     <Router>
@@ -27,7 +35,9 @@ function App() {
         {/* Public */}
         <Route path="/"       element={<LandingPage />} />
         <Route path="/login"  element={<LoginPage />} />
+        <Route path="/login/*"  element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/signup/*" element={<SignupPage />} />
 
         {/* Protected */}
         <Route path="/dashboard" element={

@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlickFuse — Design Ideas & Color Systems</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Bricolage+Grotesque:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,400&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@1,300;0,600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080810;
+    --surface: #0f0f1a;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --accent: #ff4d6d;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Bricolage Grotesque', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 12px; height: 12px;
+    background: #ff4d6d;
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1.5px solid rgba(255,77,109,0.5);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.18s ease, width 0.25s, height 0.25s;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 24px 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(8,8,16,0.95), transparent);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ff4d6d, #ff9f45);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO / PAGE HEADER ── */
+  .page-header {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center;
+    padding: 120px 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 800px 500px at 20% 50%, rgba(255,77,109,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 600px 400px at 80% 30%, rgba(99,76,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .grain-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 200; opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 256px;
+  }
+
+  .label-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,77,109,0.1);
+    border: 1px solid rgba(255,77,109,0.25);
+    color: #ff8099;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 20px;
+    border-radius: 100px;
+    margin-bottom: 32px;
+  }
+  .label-pill::before { content: '●'; font-size: 8px; }
+
+  h1.hero-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(48px, 7vw, 96px);
+    line-height: 0.95;
+    letter-spacing: -3px;
+    max-width: 900px;
+    margin-bottom: 24px;
+  }
+  h1.hero-title span { color: #ff4d6d; }
+
+  .hero-sub {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.7;
+    margin-bottom: 0;
+  }
+
+  /* ── SECTION WRAPPER ── */
+  section { padding: 100px 48px; max-width: 1400px; margin: 0 auto; }
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-label::after { content: ''; flex: 1; max-width: 60px; height: 1px; background: var(--muted); }
+  h2.section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(32px, 4vw, 52px);
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 60px;
+  }
+
+  /* ── DESIGN CONCEPTS ── */
+  .concepts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 80px;
+  }
+  .concept-card {
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.23,1,0.32,1), border-color 0.3s;
+    position: relative;
+  }
+  .concept-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(255,255,255,0.14);
+  }
+  .concept-preview {
+    height: 280px;
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .concept-info {
+    padding: 28px;
+    background: rgba(15,15,26,0.9);
+  }
+  .concept-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  .concept-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .concept-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .concept-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-top: 14px;
+    margin-right: 6px;
+    border: 1px solid;
+  }
+
+  /* CONCEPT 1 — NOIR EDITORIAL */
+  .c1-preview {
+    background: #0c0c0c;
+    font-family: 'Playfair Display', serif;
+  }
+  .c1-inner {
+    text-align: center;
+    padding: 40px;
+  }
+  .c1-inner .big { font-size: 72px; font-weight: 700; color: #f0ede6; letter-spacing: -4px; line-height: 1; }
+  .c1-inner .italic { font-size: 22px; font-style: italic; color: #8a7a6a; margin-top: 8px; }
+  .c1-bar { width: 60px; height: 3px; background: #c8a96e; margin: 16px auto; }
+  .c1-inner .tag-row { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+  .c1-inner .ctag { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 6px 14px; border: 1px solid #3a3428; color: #6b5f4a; border-radius: 4px; }
+
+  /* CONCEPT 2 — NEON UNDERGROUND */
+  .c2-preview {
+    background: #02000a;
+    overflow: hidden;
+    position: relative;
+  }
+  .c2-preview::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 80%, rgba(0,255,163,0.15), transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(255,0,200,0.12), transparent 50%);
+  }
+  .c2-inner { position: relative; z-index: 1; text-align: center; padding: 40px; }
+  .c2-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #00ffa3, #00c8ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(0,255,163,0.4));
+  }
+  .c2-inner .neon-line { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #ff00c8; font-family: 'Space Mono', monospace; margin-top: 8px; }
+  .c2-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    margin-top: 20px;
+  }
+  .c2-block {
+    height: 36px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; letter-spacing: 1px; font-family: 'Space Mono', monospace;
+  }
+  .c2-b1 { background: rgba(0,255,163,0.1); border: 1px solid rgba(0,255,163,0.3); color: #00ffa3; }
+  .c2-b2 { background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.3); color: #00c8ff; }
+  .c2-b3 { background: rgba(255,0,200,0.08); border: 1px solid rgba(255,0,200,0.3); color: #ff00c8; }
+
+  /* CONCEPT 3 — VELVET DUSK */
+  .c3-preview {
+    background: linear-gradient(145deg, #1a0830 0%, #0d1a2e 50%, #1a0820 100%);
+    position: relative; overflow: hidden;
+  }
+  .c3-preview::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 40% 60%, rgba(180,80,255,0.2), transparent 55%),
+                radial-gradient(ellipse at 80% 20%, rgba(255,100,80,0.12), transparent 45%);
+  }
+  .c3-inner { position: relative; z-index: 1; padding: 40px; }
+  .c3-eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #b450ff; font-family: 'Space Mono', monospace; margin-bottom: 12px; }
+  .c3-hed { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 600; line-height: 1.05; color: #f0e6ff; }
+  .c3-hed em { font-style: italic; color: #ff6450; }
+  .c3-meta { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  .c3-chip { padding: 6px 14px; border-radius: 100px; font-size: 11px; }
+  .c3-c1 { background: rgba(180,80,255,0.15); border: 1px solid rgba(180,80,255,0.35); color: #d494ff; }
+  .c3-c2 { background: rgba(255,100,80,0.12); border: 1px solid rgba(255,100,80,0.3); color: #ff9080; }
+  .c3-c3 { background: rgba(80,180,255,0.1); border: 1px solid rgba(80,180,255,0.25); color: #80c8ff; }
+
+  /* ── COLOR SYSTEMS ── */
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+  .palette-card {
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: border-color 0.3s, transform 0.4s cubic-bezier(0.23,1,0.32,1);
+  }
+  .palette-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-4px); }
+
+  .palette-visual {
+    height: 200px;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  }
+  .palette-swatch {
+    flex: 1;
+    transition: flex 0.35s ease;
+    display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+    padding-bottom: 14px;
+  }
+  .palette-swatch:hover { flex: 2; }
+  .swatch-hex {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    opacity: 0;
+    transition: opacity 0.2s;
+    letter-spacing: 1px;
+  }
+  .palette-swatch:hover .swatch-hex { opacity: 1; }
+
+  .palette-info { padding: 28px; background: var(--surface); }
+  .palette-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .palette-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+  .palette-uses {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .use-tag {
+    font-size: 11px; padding: 4px 12px;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+    border: 1px solid rgba(255,255,255,0.08);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Palette specific colors */
+  .s-crimson { background: #1a0a0a; }
+  .s-red { background: #d72638; }
+  .s-amber { background: #f4a261; }
+  .s-sand { background: #e9c46a; }
+  .s-cream { background: #f0ede0; }
+
+  .s-void { background: #050509; }
+  .s-indigo { background: #0f0a2e; }
+  .s-purple { background: #4a1a8e; }
+  .s-violet { background: #9b4dca; }
+  .s-lilac { background: #d4a7ff; }
+
+  .s-ocean { background: #001219; }
+  .s-teal { background: #005f73; }
+  .s-cyan { background: #0a9396; }
+  .s-mint { background: #94d2bd; }
+  .s-foam { background: #e9f8f4; }
+
+  .s-ash { background: #0e0e12; }
+  .s-slate { background: #1e1e2a; }
+  .s-steel { background: #3a3a52; }
+  .s-silver { background: #8888aa; }
+  .s-ghost { background: #e0e0f0; }
+  
+  /* Palette 5 and 6 - spanning full width */
+  .palette-wide { grid-column: span 2; }
+  .palette-wide .palette-visual { height: 180px; }
+
+  .s-noir { background: #080808; }
+  .s-char { background: #141414; }
+  .s-gold { background: #c8a96e; }
+  .s-rust { background: #e76f51; }
+  .s-bone { background: #f4e8d0; }
+  .s-champagne { background: #fce4a0; }
+  .s-tan { background: #d4a76a; }
+  .s-brown { background: #8b5e3c; }
+
+  .s-midnight { background: #02000d; }
+  .s-neon-g { background: #00ff9f; }
+  .s-neon-b { background: #00d4ff; }
+  .s-neon-p { background: #bf5af2; }
+  .s-neon-r { background: #ff453a; }
+  .s-neon-y { background: #ffd60a; }
+  .s-neon-m { background: #ff2d78; }
+  .s-neon-c { background: #30d158; }
+
+  /* ── TYPOGRAPHY PAIRINGS ── */
+  .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .type-card {
+    padding: 36px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: var(--surface);
+    transition: transform 0.4s cubic-bezier(0.23,1,0.32,1), border-color 0.3s;
+  }
+  .type-card:hover { transform: translateY(-6px); border-color: rgba(255,255,255,0.12); }
+  .type-tag { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+  .type-display { font-size: 48px; line-height: 1; letter-spacing: -2px; margin-bottom: 12px; }
+  .type-body { font-size: 14px; line-height: 1.7; color: var(--muted); }
+  .type-names { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .type-names strong { color: var(--text); }
+
+  /* ── UI COMPONENT PREVIEWS ── */
+  .ui-preview-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; }
+  .ui-card {
+    border-radius: 20px;
+    padding: 40px;
+    border: 1px solid rgba(255,255,255,0.06);
+    position: relative; overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.23,1,0.32,1);
+  }
+  .ui-card:hover { transform: translateY(-6px); }
+  .ui-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 28px; }
+
+  /* Movie Card Component */
+  .movie-card-demo {
+    background: rgba(255,255,255,0.03);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    width: 200px;
+    margin: 0 auto;
+    transition: transform 0.3s;
+  }
+  .movie-card-demo:hover { transform: translateY(-6px) scale(1.02); }
+  .mc-poster {
+    height: 120px;
+    background: linear-gradient(135deg, #1a0830, #0d1a2e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    position: relative; overflow: hidden;
+  }
+  .mc-poster::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(8,8,16,0.8), transparent);
+  }
+  .mc-info { padding: 16px; }
+  .mc-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .mc-meta { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .mc-rating { display: flex; align-items: center; gap: 6px; }
+  .mc-stars { color: #f4a261; font-size: 12px; }
+  .mc-score { font-size: 12px; font-family: 'Space Mono', monospace; color: #f4a261; }
+  .mc-badge { display: inline-block; font-size: 9px; padding: 3px 8px; background: rgba(255,77,109,0.15); border: 1px solid rgba(255,77,109,0.3); color: #ff8099; border-radius: 4px; font-family: 'Space Mono', monospace; letter-spacing: 1px; margin-top: 8px; }
+
+  /* Search UI Demo */
+  .search-demo {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .search-demo:hover { border-color: rgba(255,77,109,0.4); background: rgba(255,77,109,0.04); }
+  .search-icon { color: var(--muted); font-size: 16px; }
+  .search-text { font-size: 14px; color: var(--muted); }
+  .search-text span { color: var(--text); }
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-chip {
+    padding: 6px 16px; border-radius: 100px; font-size: 12px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-chip.active { background: #ff4d6d; color: white; }
+  .filter-chip.inactive { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: var(--muted); }
+  .filter-chip.inactive:hover { border-color: rgba(255,77,109,0.4); color: var(--text); }
+
+  /* Button demos */
+  .btn-row { display: flex; flex-direction: column; gap: 12px; }
+  .btn {
+    padding: 14px 28px; border-radius: 12px; font-size: 14px; font-weight: 600;
+    cursor: pointer; border: none; font-family: 'Bricolage Grotesque', sans-serif;
+    letter-spacing: -0.2px; transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #ff4d6d, #ff8a50);
+    color: white;
+    box-shadow: 0 8px 32px rgba(255,77,109,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,77,109,0.5); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.25); }
+  .btn-outline-accent {
+    background: rgba(255,77,109,0.08);
+    color: #ff8099;
+    border: 1px solid rgba(255,77,109,0.3);
+  }
+  .btn-outline-accent:hover { background: rgba(255,77,109,0.15); }
+
+  /* ── LAYOUT PATTERNS ── */
+  .layout-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .layout-thumb {
+    aspect-ratio: 4/3;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+    position: relative;
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.3s, transform 0.4s cubic-bezier(0.23,1,0.32,1);
+  }
+  .layout-thumb:hover { border-color: rgba(255,77,109,0.4); transform: translateY(-4px); }
+  .layout-name { position: absolute; bottom: 16px; left: 16px; font-size: 13px; font-weight: 600; font-family: 'Syne', sans-serif; }
+  .layout-style { position: absolute; bottom: 36px; left: 16px; font-size: 10px; color: var(--muted); font-family: 'Space Mono', monospace; letter-spacing: 1px; }
+
+  /* Layout thumb internals */
+  .lt-asymmetric { padding: 20px; }
+  .lt-a-hero { height: 45%; background: rgba(255,77,109,0.1); border-radius: 8px; margin-bottom: 8px; }
+  .lt-a-row { display: flex; gap: 8px; height: 30%; }
+  .lt-a-r1 { flex: 2; background: rgba(255,255,255,0.04); border-radius: 8px; }
+  .lt-a-r2 { flex: 1; background: rgba(255,255,255,0.04); border-radius: 8px; }
+  .lt-a-r3 { flex: 1.5; background: rgba(255,255,255,0.04); border-radius: 8px; }
+
+  .lt-editorial { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .lt-e-top { display: flex; gap: 8px; flex: 1; }
+  .lt-e-big { flex: 3; background: rgba(180,80,255,0.1); border-radius: 8px; }
+  .lt-e-sm { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .lt-e-sm div { flex: 1; background: rgba(255,255,255,0.04); border-radius: 8px; }
+  .lt-e-bot { height: 25%; background: rgba(255,255,255,0.03); border-radius: 8px; }
+
+  .lt-magazine { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; height: 100%; }
+  .lt-m1 { grid-row: span 2; background: rgba(0,200,255,0.1); border-radius: 8px; }
+  .lt-m2 { background: rgba(255,255,255,0.05); border-radius: 8px; }
+  .lt-m3 { background: rgba(255,255,255,0.03); border-radius: 8px; }
+
+  .lt-masonry { padding: 16px; display: flex; gap: 6px; }
+  .lt-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .lt-c1 { flex: 2; background: rgba(255,77,109,0.1); border-radius: 6px; }
+  .lt-c2 { flex: 1; background: rgba(255,255,255,0.04); border-radius: 6px; }
+  .lt-c3 { flex: 1.5; background: rgba(255,255,255,0.04); border-radius: 6px; }
+  .lt-c4 { flex: 2.5; background: rgba(255,255,255,0.03); border-radius: 6px; }
+
+  .lt-spotlight { padding: 20px; position: relative; }
+  .lt-s-center { width: 50%; height: 50%; background: rgba(255,200,0,0.1); border-radius: 50%; margin: 0 auto; position: relative; z-index: 1; }
+  .lt-s-ring { position: absolute; inset: 10px; border: 1px solid rgba(255,200,0,0.15); border-radius: 50%; }
+  .lt-s-ring2 { position: absolute; inset: 20px; border: 1px dashed rgba(255,200,0,0.08); border-radius: 50%; }
+  .lt-s-dots { display: flex; justify-content: space-between; padding: 0 10px; margin-top: 12px; }
+  .lt-s-dot { width: 30px; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; }
+
+  .lt-kinetic { padding: 16px; }
+  .lt-k-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .lt-k-a { flex: 1; height: 35px; background: rgba(0,255,163,0.1); border-radius: 4px; }
+  .lt-k-b { flex: 2; height: 35px; background: rgba(255,255,255,0.04); border-radius: 4px; }
+  .lt-k-c { flex: 1.5; height: 35px; background: rgba(255,255,255,0.03); border-radius: 4px; }
+  .lt-k-wide { height: 60px; background: rgba(0,200,255,0.08); border-radius: 4px; margin-bottom: 6px; }
+
+  /* ── ANIMATION CONCEPTS ── */
+  .anim-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .anim-card {
+    border-radius: 16px;
+    padding: 28px 24px;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: var(--surface);
+    text-align: center;
+    transition: border-color 0.3s, transform 0.4s cubic-bezier(0.23,1,0.32,1);
+  }
+  .anim-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.12); }
+  .anim-icon {
+    width: 60px; height: 60px;
+    border-radius: 14px;
+    margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .anim-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .anim-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* ── DIVIDERS ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    margin: 0 48px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 60px 48px;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    margin-top: 60px;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  @keyframes pulse-glow { 0%,100%{opacity:0.5} 50%{opacity:1} }
+  @keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes slide-in { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+
+  .float-anim { animation: float 4s ease-in-out infinite; }
+  .pulse-anim { animation: pulse-glow 2s ease-in-out infinite; }
+
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s cubic-bezier(0.23,1,0.32,1), transform 0.7s cubic-bezier(0.23,1,0.32,1);
+  }
+  [data-reveal].revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Stagger delays */
+  [data-delay="1"] { transition-delay: 0.1s; }
+  [data-delay="2"] { transition-delay: 0.2s; }
+  [data-delay="3"] { transition-delay: 0.3s; }
+  [data-delay="4"] { transition-delay: 0.4s; }
+  [data-delay="5"] { transition-delay: 0.5s; }
+  [data-delay="6"] { transition-delay: 0.6s; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    section { padding: 60px 24px; }
+    .concepts-grid, .type-grid, .layout-grid, .anim-grid { grid-template-columns: 1fr; }
+    .palette-grid { grid-template-columns: 1fr; }
+    .palette-wide { grid-column: span 1; }
+    .ui-preview-grid { grid-template-columns: 1fr; }
+    h1.hero-title { letter-spacing: -2px; }
+    body { cursor: auto; }
+    .cursor, .cursor-ring { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain-overlay"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav>
+  <div class="nav-logo">FlickFuse</div>
+  <ul class="nav-links">
+    <li><a href="#concepts">Concepts</a></li>
+    <li><a href="#colors">Colors</a></li>
+    <li><a href="#typography">Type</a></li>
+    <li><a href="#components">UI</a></li>
+    <li><a href="#layouts">Layouts</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="page-header">
+  <div class="label-pill">Design System Exploration</div>
+  <h1 class="hero-title float-anim">
+    Design<br>
+    <span>Ideas</span> &amp;<br>
+    Color Systems
+  </h1>
+  <p class="hero-sub">A curated exploration of visual directions, palettes, type pairings, and UI patterns for FlickFuse's 3D landing page.</p>
+</div>
+
+<!-- CONCEPTS -->
+<section id="concepts">
+  <div class="section-label" data-reveal>Design Direction</div>
+  <h2 class="section-title" data-reveal data-delay="1">3 Visual Directions</h2>
+
+  <div class="concepts-grid">
+    <!-- CONCEPT 1 -->
+    <div class="concept-card" data-reveal data-delay="1">
+      <div class="concept-preview c1-preview">
+        <div class="c1-inner">
+          <div class="big">FUSE</div>
+          <div class="italic">every frame</div>
+          <div class="c1-bar"></div>
+          <div class="tag-row">
+            <div class="ctag">DRAMA</div>
+            <div class="ctag">ACTION</div>
+            <div class="ctag">SCI-FI</div>
+          </div>
+        </div>
+      </div>
+      <div class="concept-info">
+        <div class="concept-number">DIRECTION 01</div>
+        <div class="concept-name">Noir Editorial</div>
+        <div class="concept-desc">Inspired by vintage film criticism and print magazines. High contrast, serif headlines, gold accents on deep charcoal. Feels prestigious, literary, timeless.</div>
+        <span class="concept-tag" style="border-color:rgba(200,169,110,0.4);color:#c8a96e;">Prestige</span>
+        <span class="concept-tag" style="border-color:rgba(255,255,255,0.15);color:#999;">Refined</span>
+        <span class="concept-tag" style="border-color:rgba(255,255,255,0.1);color:#777;">Classic</span>
+      </div>
+    </div>
+
+    <!-- CONCEPT 2 -->
+    <div class="concept-card" data-reveal data-delay="2">
+      <div class="concept-preview c2-preview">
+        <div class="c2-inner">
+          <div class="c2-logo">FlickFuse</div>
+          <div class="neon-line">// discover · fuse · stream</div>
+          <div class="c2-grid">
+            <div class="c2-block c2-b1">SEARCH</div>
+            <div class="c2-block c2-b2">FUSE</div>
+            <div class="c2-block c2-b3">WATCH</div>
+          </div>
+        </div>
+      </div>
+      <div class="concept-info">
+        <div class="concept-number">DIRECTION 02</div>
+        <div class="concept-name">Neon Underground</div>
+        <div class="concept-desc">Cyberpunk-adjacent. Deep void black with vivid neon triads — teal, magenta, cyan. Mono fonts, sharp grid lines. Feels techy, energetic, subversive.</div>
+        <span class="concept-tag" style="border-color:rgba(0,255,163,0.4);color:#00ffa3;">Cyber</span>
+        <span class="concept-tag" style="border-color:rgba(0,200,255,0.3);color:#00c8ff;">Bold</span>
+        <span class="concept-tag" style="border-color:rgba(255,0,200,0.3);color:#ff00c8;">Electric</span>
+      </div>
+    </div>
+
+    <!-- CONCEPT 3 -->
+    <div class="concept-card" data-reveal data-delay="3">
+      <div class="concept-preview c3-preview">
+        <div class="c3-inner">
+          <div class="c3-eyebrow">// velvet.midnight.v1</div>
+          <div class="c3-hed">Every<br><em>Story</em><br>Awaits</div>
+          <div class="c3-meta">
+            <span class="c3-chip c3-c1">Drama</span>
+            <span class="c3-chip c3-c2">Thriller</span>
+            <span class="c3-chip c3-c3">Sci-Fi</span>
+          </div>
+        </div>
+      </div>
+      <div class="concept-info">
+        <div class="concept-number">DIRECTION 03</div>
+        <div class="concept-name">Velvet Dusk</div>
+        <div class="concept-desc">Deep purple midnight paired with warm coral and icy blue. Elegant serif headlines collide with modern UI. Romantic, cinematic, deeply immersive.</div>
+        <span class="concept-tag" style="border-color:rgba(180,80,255,0.4);color:#d494ff;">Luxe</span>
+        <span class="concept-tag" style="border-color:rgba(255,100,80,0.3);color:#ff9080;">Warm</span>
+        <span class="concept-tag" style="border-color:rgba(80,180,255,0.3);color:#80c8ff;">Cinematic</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- COLOR PALETTES -->
+<section id="colors">
+  <div class="section-label" data-reveal>Unique Color Systems</div>
+  <h2 class="section-title" data-reveal data-delay="1">6 Palette Options<br><span style="color:var(--muted);font-weight:300;">Hover to expand swatches</span></h2>
+
+  <div class="palette-grid">
+
+    <!-- P1: Crimson & Ember -->
+    <div class="palette-card" data-reveal data-delay="1">
+      <div class="palette-visual">
+        <div class="palette-swatch s-crimson"><span class="swatch-hex" style="color:#e0e0e0;">#1A0A0A</span></div>
+        <div class="palette-swatch s-red"><span class="swatch-hex" style="color:#fff;">#D72638</span></div>
+        <div class="palette-swatch s-amber"><span class="swatch-hex" style="color:#fff;">#F4A261</span></div>
+        <div class="palette-swatch s-sand"><span class="swatch-hex" style="color:#333;">#E9C46A</span></div>
+        <div class="palette-swatch s-cream"><span class="swatch-hex" style="color:#333;">#F0EDE0</span></div>
+      </div>
+      <div class="palette-info">
+        <div class="palette-name">🔥 Crimson & Ember</div>
+        <div class="palette-desc">Deep wine blacks ignite into vivid red, softening through amber and sand to warm cream. Passionate, powerful, cinematic. Perfect for an action/thriller-focused feel.</div>
+        <div class="palette-uses">
+          <span class="use-tag">Hero BG</span>
+          <span class="use-tag">CTA Buttons</span>
+          <span class="use-tag">Rating Stars</span>
+          <span class="use-tag">Hover States</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P2: Cosmic Grape -->
+    <div class="palette-card" data-reveal data-delay="2">
+      <div class="palette-visual">
+        <div class="palette-swatch s-void"><span class="swatch-hex" style="color:#888;">#050509</span></div>
+        <div class="palette-swatch s-indigo"><span class="swatch-hex" style="color:#aaa;">#0F0A2E</span></div>
+        <div class="palette-swatch s-purple"><span class="swatch-hex" style="color:#fff;">#4A1A8E</span></div>
+        <div class="palette-swatch s-violet"><span class="swatch-hex" style="color:#fff;">#9B4DCA</span></div>
+        <div class="palette-swatch s-lilac"><span class="swatch-hex" style="color:#333;">#D4A7FF</span></div>
+      </div>
+      <div class="palette-info">
+        <div class="palette-name">🌌 Cosmic Grape</div>
+        <div class="palette-desc">Void black expanding into deep indigo, bursting into vivid violet, fading to soft lilac. Mysterious, sci-fi adjacent, premium. Great for the "Floating Universe" concept.</div>
+        <div class="palette-uses">
+          <span class="use-tag">3D Scene</span>
+          <span class="use-tag">Gradients</span>
+          <span class="use-tag">Tags</span>
+          <span class="use-tag">Glow Effects</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P3: Arctic Abyss -->
+    <div class="palette-card" data-reveal data-delay="3">
+      <div class="palette-visual">
+        <div class="palette-swatch s-ocean"><span class="swatch-hex" style="color:#888;">#001219</span></div>
+        <div class="palette-swatch s-teal"><span class="swatch-hex" style="color:#fff;">#005F73</span></div>
+        <div class="palette-swatch s-cyan"><span class="swatch-hex" style="color:#fff;">#0A9396</span></div>
+        <div class="palette-swatch s-mint"><span class="swatch-hex" style="color:#333;">#94D2BD</span></div>
+        <div class="palette-swatch s-foam"><span class="swatch-hex" style="color:#333;">#E9F8F4</span></div>
+      </div>
+      <div class="palette-info">
+        <div class="palette-name">🧊 Arctic Abyss</div>
+        <div class="palette-desc">From deep ocean black to icy teal-cyan and frosted foam white. Clean, futuristic, editorial. Unique in the entertainment space — fresh, unexpected, sophisticated.</div>
+        <div class="palette-uses">
+          <span class="use-tag">Sci-Fi Genre</span>
+          <span class="use-tag">Data Viz</span>
+          <span class="use-tag">Search UI</span>
+          <span class="use-tag">Feature Cards</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P4: Ash & Ghost -->
+    <div class="palette-card" data-reveal data-delay="4">
+      <div class="palette-visual">
+        <div class="palette-swatch s-ash"><span class="swatch-hex" style="color:#777;">#0E0E12</span></div>
+        <div class="palette-swatch s-slate"><span class="swatch-hex" style="color:#aaa;">#1E1E2A</span></div>
+        <div class="palette-swatch s-steel"><span class="swatch-hex" style="color:#ccc;">#3A3A52</span></div>
+        <div class="palette-swatch s-silver"><span class="swatch-hex" style="color:#fff;">#8888AA</span></div>
+        <div class="palette-swatch s-ghost"><span class="swatch-hex" style="color:#333;">#E0E0F0</span></div>
+      </div>
+      <div class="palette-info">
+        <div class="palette-name">👻 Ash & Ghost</div>
+        <div class="palette-desc">A restrained monochromatic scale from near-black to ghost white with cool blue undertones. Ultra-minimal, gallery-quality. Let poster artwork provide all the color.</div>
+        <div class="palette-uses">
+          <span class="use-tag">Base System</span>
+          <span class="use-tag">Typography</span>
+          <span class="use-tag">Borders</span>
+          <span class="use-tag">Backdrop</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P5: Noir Gold — WIDE -->
+    <div class="palette-card palette-wide" data-reveal data-delay="2">
+      <div class="palette-visual">
+        <div class="palette-swatch s-noir"><span class="swatch-hex" style="color:#666;">#080808</span></div>
+        <div class="palette-swatch s-char"><span class="swatch-hex" style="color:#888;">#141414</span></div>
+        <div class="palette-swatch s-gold"><span class="swatch-hex" style="color:#fff;">#C8A96E</span></div>
+        <div class="palette-swatch s-rust"><span class="swatch-hex" style="color:#fff;">#E76F51</span></div>
+        <div class="palette-swatch s-bone"><span class="swatch-hex" style="color:#555;">#F4E8D0</span></div>
+        <div class="palette-swatch s-champagne"><span class="swatch-hex" style="color:#555;">#FCE4A0</span></div>
+        <div class="palette-swatch s-tan"><span class="swatch-hex" style="color:#fff;">#D4A76A</span></div>
+        <div class="palette-swatch s-brown"><span class="swatch-hex" style="color:#fff;">#8B5E3C</span></div>
+      </div>
+      <div class="palette-info">
+        <div class="palette-name">✨ Noir Gold  —  Recommended for "Noir Editorial" Concept</div>
+        <div class="palette-desc">Pure cinema. Deep charcoal blacks anchored by warm champagne gold, baked rust, and bone white. Every Oscar ceremony, every old Hollywood marquee. This palette says "prestige streaming" without saying a word. Pair with serif display fonts for maximum impact.</div>
+        <div class="palette-uses">
+          <span class="use-tag">Primary Palette</span>
+          <span class="use-tag">Film Strip</span>
+          <span class="use-tag">Awards Section</span>
+          <span class="use-tag">Headlines</span>
+          <span class="use-tag">Decorative Borders</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P6: Neon Riot — WIDE -->
+    <div class="palette-card palette-wide" data-reveal data-delay="3">
+      <div class="palette-visual">
+        <div class="palette-swatch s-midnight"><span class="swatch-hex" style="color:#666;">#02000D</span></div>
+        <div class="palette-swatch s-neon-g"><span class="swatch-hex" style="color:#000;">#00FF9F</span></div>
+        <div class="palette-swatch s-neon-b"><span class="swatch-hex" style="color:#000;">#00D4FF</span></div>
+        <div class="palette-swatch s-neon-p"><span class="swatch-hex" style="color:#fff;">#BF5AF2</span></div>
+        <div class="palette-swatch s-neon-r"><span class="swatch-hex" style="color:#fff;">#FF453A</span></div>
+        <div class="palette-swatch s-neon-y"><span class="swatch-hex" style="color:#000;">#FFD60A</span></div>
+        <div class="palette-swatch s-neon-m"><span class="swatch-hex" style="color:#fff;">#FF2D78</span></div>
+        <div class="palette-swatch s-neon-c"><span class="swatch-hex" style="color:#000;">#30D158</span></div>
+      </div>
+      <div class="palette-info">
+        <div class="palette-name">⚡ Neon Riot  —  Recommended for "Neon Underground" Concept</div>
+        <div class="palette-desc">Absolute void black detonated by a full spectrum of electric neons — each color mapping to a genre: green (thriller), blue (sci-fi), purple (fantasy), red (horror), yellow (comedy), magenta (romance), teal (documentary). Use sparingly as accent-only on a near-black base. Never combine more than 2-3 neons at once.</div>
+        <div class="palette-uses">
+          <span class="use-tag">Genre Tags</span>
+          <span class="use-tag">Hover Glow</span>
+          <span class="use-tag">3D Bloom</span>
+          <span class="use-tag">Data Charts</span>
+          <span class="use-tag">Active States</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TYPOGRAPHY -->
+<section id="typography">
+  <div class="section-label" data-reveal>Type Pairings</div>
+  <h2 class="section-title" data-reveal data-delay="1">Font Combinations</h2>
+
+  <div class="type-grid">
+    <div class="type-card" data-reveal data-delay="1">
+      <div class="type-tag">Pairing 01 — Dramatic</div>
+      <div class="type-display" style="font-family:'Playfair Display',serif; font-style:italic;">FlickFuse</div>
+      <div class="type-body" style="font-family:'Bricolage Grotesque',sans-serif;">Discover every story waiting to be told. Unified search across all your favourite platforms.</div>
+      <div class="type-names"><strong>Display:</strong> Playfair Display Italic<br><strong>Body:</strong> Bricolage Grotesque</div>
+    </div>
+
+    <div class="type-card" data-reveal data-delay="2">
+      <div class="type-tag">Pairing 02 — Cinematic</div>
+      <div class="type-display" style="font-family:'Syne',sans-serif; font-weight:800; letter-spacing:-3px;">FLICKFUSE</div>
+      <div class="type-body" style="font-family:'Space Mono',monospace; font-size:12px; letter-spacing:0.5px;">// discover every story waiting<br>// to be told → unified search</div>
+      <div class="type-names"><strong>Display:</strong> Syne 800<br><strong>Body:</strong> Space Mono</div>
+    </div>
+
+    <div class="type-card" data-reveal data-delay="3">
+      <div class="type-tag">Pairing 03 — Luxe</div>
+      <div class="type-display" style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:52px; font-weight:300; letter-spacing:-1px;">FlickFuse</div>
+      <div class="type-body" style="font-family:'Bricolage Grotesque',sans-serif; font-weight:300; letter-spacing:0.3px;">Discover every story waiting to be told. Unified search across all platforms.</div>
+      <div class="type-names"><strong>Display:</strong> Cormorant Garamond Italic<br><strong>Body:</strong> Bricolage Grotesque Light</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- UI COMPONENTS -->
+<section id="components">
+  <div class="section-label" data-reveal>UI Components</div>
+  <h2 class="section-title" data-reveal data-delay="1">Component Previews</h2>
+
+  <div class="ui-preview-grid">
+    <!-- Movie Card -->
+    <div class="ui-card" style="background: var(--surface);" data-reveal data-delay="1">
+      <div class="ui-label">Movie Discovery Card</div>
+      <div class="movie-card-demo">
+        <div class="mc-poster">🎬</div>
+        <div class="mc-info">
+          <div class="mc-title">Inception</div>
+          <div class="mc-meta">2010 · Sci-Fi · 148 min</div>
+          <div class="mc-rating">
+            <span class="mc-stars">★★★★★</span>
+            <span class="mc-score">8.8</span>
+          </div>
+          <div class="mc-badge">TRENDING</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="ui-card" style="background: var(--surface);" data-reveal data-delay="2">
+      <div class="ui-label">Search & Filter UI</div>
+      <div class="search-demo">
+        <span class="search-icon">🔍</span>
+        <span class="search-text">Search <span>"Interstellar"</span>...</span>
+      </div>
+      <div class="filter-row">
+        <div class="filter-chip active">All</div>
+        <div class="filter-chip inactive">Action</div>
+        <div class="filter-chip inactive">Drama</div>
+        <div class="filter-chip inactive">Sci-Fi</div>
+        <div class="filter-chip inactive">Horror</div>
+        <div class="filter-chip inactive">Comedy</div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="ui-card" style="background: var(--surface);" data-reveal data-delay="3">
+      <div class="ui-label">Button System</div>
+      <div class="btn-row">
+        <button class="btn btn-primary">🎬 Enter FlickFuse →</button>
+        <button class="btn btn-ghost">▶ Watch Demo</button>
+        <button class="btn btn-outline-accent">+ Add to Watchlist</button>
+      </div>
+    </div>
+
+    <!-- Glassmorphism Nav -->
+    <div class="ui-card" style="background: linear-gradient(135deg, rgba(26,8,48,0.8), rgba(13,26,46,0.8)); backdrop-filter: blur(20px);" data-reveal data-delay="4">
+      <div class="ui-label">Glassmorphism Card</div>
+      <div style="font-family:'Syne',sans-serif; font-size:20px; font-weight:700; margin-bottom:12px;">🎥 Now Trending</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px 16px; font-size:13px;">The Batman</div>
+        <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px 16px; font-size:13px;">Dune: Part Two</div>
+        <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px 16px; font-size:13px;">Oppenheimer</div>
+        <div style="background:rgba(180,80,255,0.12); border:1px solid rgba(180,80,255,0.3); border-radius:10px; padding:10px 16px; font-size:13px; color:#d494ff;">+ 47 more →</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- LAYOUT PATTERNS -->
+<section id="layouts">
+  <div class="section-label" data-reveal>Layout Patterns</div>
+  <h2 class="section-title" data-reveal data-delay="1">Page Layout Ideas</h2>
+
+  <div class="layout-grid">
+    <div class="layout-thumb" data-reveal data-delay="1">
+      <div class="lt-asymmetric" style="height:100%; display:flex; flex-direction:column; gap:8px;">
+        <div class="lt-a-hero"></div>
+        <div class="lt-a-row">
+          <div class="lt-a-r1"></div>
+          <div class="lt-a-r2"></div>
+          <div class="lt-a-r3"></div>
+        </div>
+      </div>
+      <div class="layout-style">LAYOUT 01</div>
+      <div class="layout-name">Asymmetric Hero</div>
+    </div>
+
+    <div class="layout-thumb" data-reveal data-delay="2">
+      <div class="lt-editorial" style="height:100%;">
+        <div class="lt-e-top">
+          <div class="lt-e-big"></div>
+          <div class="lt-e-sm">
+            <div></div><div></div><div></div>
+          </div>
+        </div>
+        <div class="lt-e-bot"></div>
+      </div>
+      <div class="layout-style">LAYOUT 02</div>
+      <div class="layout-name">Editorial Split</div>
+    </div>
+
+    <div class="layout-thumb" data-reveal data-delay="3">
+      <div class="lt-magazine" >
+        <div class="lt-m1"></div>
+        <div class="lt-m2"></div>
+        <div class="lt-m3"></div>
+      </div>
+      <div class="layout-style">LAYOUT 03</div>
+      <div class="layout-name">Magazine Grid</div>
+    </div>
+
+    <div class="layout-thumb" data-reveal data-delay="4">
+      <div class="lt-masonry" style="height:100%;">
+        <div class="lt-col"><div class="lt-c1"></div><div class="lt-c2"></div></div>
+        <div class="lt-col"><div class="lt-c3"></div><div class="lt-c4"></div></div>
+        <div class="lt-col"><div class="lt-c2"></div><div class="lt-c1"></div></div>
+      </div>
+      <div class="layout-style">LAYOUT 04</div>
+      <div class="layout-name">Masonry Flow</div>
+    </div>
+
+    <div class="layout-thumb" data-reveal data-delay="5">
+      <div class="lt-spotlight" style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div class="lt-s-ring2">
+          <div class="lt-s-ring">
+            <div class="lt-s-center"></div>
+          </div>
+        </div>
+        <div class="lt-s-dots" style="width:100%; margin-top:20px;">
+          <div class="lt-s-dot"></div>
+          <div class="lt-s-dot"></div>
+          <div class="lt-s-dot"></div>
+        </div>
+      </div>
+      <div class="layout-style">LAYOUT 05</div>
+      <div class="layout-name">Spotlight Radial</div>
+    </div>
+
+    <div class="layout-thumb" data-reveal data-delay="6">
+      <div class="lt-kinetic" style="height:100%; padding:16px;">
+        <div class="lt-k-wide"></div>
+        <div class="lt-k-row"><div class="lt-k-a"></div><div class="lt-k-b"></div><div class="lt-k-c"></div></div>
+        <div class="lt-k-row"><div class="lt-k-b"></div><div class="lt-k-a"></div></div>
+        <div class="lt-k-row"><div class="lt-k-c"></div><div class="lt-k-b"></div><div class="lt-k-a"></div></div>
+      </div>
+      <div class="layout-style">LAYOUT 06</div>
+      <div class="layout-name">Kinetic Rows</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ANIMATION IDEAS -->
+<section>
+  <div class="section-label" data-reveal>Motion Design</div>
+  <h2 class="section-title" data-reveal data-delay="1">Animation Concepts</h2>
+
+  <div class="anim-grid">
+    <div class="anim-card" data-reveal data-delay="1">
+      <div class="anim-icon" style="background:rgba(255,77,109,0.12); color:#ff4d6d;">🎞️</div>
+      <div class="anim-title">Film Grain Pulse</div>
+      <div class="anim-desc">CSS noise texture that subtly pulses in opacity — 3% to 6% over 4s. Gives the entire page a living, breathing quality without performance cost.</div>
+    </div>
+    <div class="anim-card" data-reveal data-delay="2">
+      <div class="anim-icon" style="background:rgba(180,80,255,0.12); color:#b450ff;">🌊</div>
+      <div class="anim-title">Scroll Velocity Blur</div>
+      <div class="anim-desc">Cards apply a CSS `blur(4px) scale(0.98)` during fast scroll, snapping sharp when stopped. Feels physical, like inertia-based motion.</div>
+    </div>
+    <div class="anim-card" data-reveal data-delay="3">
+      <div class="anim-icon" style="background:rgba(0,200,255,0.1); color:#00c8ff;">✨</div>
+      <div class="anim-title">Spotlight Cursor</div>
+      <div class="anim-desc">A radial gradient "flashlight" follows the cursor on dark hero sections, revealing hidden texture beneath. Pure CSS `background: radial-gradient` on `mousemove`.</div>
+    </div>
+    <div class="anim-card" data-reveal data-delay="4">
+      <div class="anim-icon" style="background:rgba(255,200,0,0.1); color:#ffd60a;">⚡</div>
+      <div class="anim-title">Magnetic Buttons</div>
+      <div class="anim-desc">CTA buttons slightly translate toward the cursor when nearby (within 80px). Uses JS proximity detection + GSAP `quickTo`. Creates a tactile, premium feel.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div style="font-size:18px; font-family:'Syne',sans-serif; font-weight:700; color:var(--text); margin-bottom:12px;">FlickFuse Design System</div>
+  Exploration doc for 3D Landing Page concepts · All palettes, layouts &amp; concepts are original
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  (function animate() {
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    if (cursor) { cursor.style.left = mx + 'px'; cursor.style.top = my + 'px'; }
+    if (ring) { ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; }
+    requestAnimationFrame(animate);
+  })();
+
+  // Scroll reveals
+  const reveals = document.querySelectorAll('[data-reveal]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); } });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+
+  // Hover tilt on concept cards
+  document.querySelectorAll('.concept-card, .palette-card, .type-card, .ui-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = `translateY(-8px) rotateX(${-y*6}deg) rotateY(${x*6}deg)`;
+      card.style.transition = 'transform 0.1s';
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+      card.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+    });
+  });
+
+  // Smooth nav links
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>

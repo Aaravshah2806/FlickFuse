@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Copy, Plus, RefreshCw, UserPlus, Settings, TrendingUp, Clock, Bell } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useRecommendationsStore } from '../store/recommendationsStore';
+import { useWatchHistoryStore } from '../store/watchHistoryStore';
 import Layout from '../components/Layout';
 
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w92';
@@ -30,9 +31,14 @@ const ACTION_NEONS = {
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const { recommendations, fetch, fetchReleaseRadar, alerts, isLoading, source } = useRecommendationsStore();
+  const { history, fetchHistory, isLoading: isLoadingHistory } = useWatchHistoryStore();
   const navigate = useNavigate();
 
-  useEffect(() => { fetch(); fetchReleaseRadar(); }, []);
+  useEffect(() => { 
+    fetch(); 
+    fetchReleaseRadar(); 
+    fetchHistory();
+  }, []);
 
   const copyId = () => {
     if (user?.uniqueId) {
@@ -225,7 +231,60 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Recent Activity */}
+        {/* Watch History */}
+        <div style={{ marginBottom: '40px' }}>
+          <div className="section-header">
+            <h2 className="section-title">
+              <Clock size={18} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px', color: '#BF5AF2' }} />
+              Recent Watch History
+            </h2>
+          </div>
+          
+          {isLoadingHistory ? (
+            <div style={{ display: 'flex', gap: '16px', overflowX: 'hidden' }}>
+              {[1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ width: '140px', height: '200px', flexShrink: 0 }} />)}
+            </div>
+          ) : history.length === 0 ? (
+            <div className="card" style={{ padding: '32px', textAlign: 'center', color: '#8888AA', fontSize: '0.9rem' }}>
+              No history found. Import your data to see it here!
+            </div>
+          ) : (
+            <div style={{ 
+              display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px',
+              scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent'
+            }}>
+              {history.slice(0, 10).map((event) => (
+                <div key={event.id} className="card card-hover" style={{ 
+                  flexShrink: 0, width: '160px', padding: '12px',
+                  display: 'flex', flexDirection: 'column',
+                }}>
+                  {event.posterPath ? (
+                    <img src={`${TMDB_IMG}${event.posterPath}`} alt={event.title} 
+                      style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', marginBottom: '12px' }} 
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                  ) : (
+                    <div style={{ 
+                      width: '100%', height: '200px', background: 'rgba(255,255,255,0.05)', 
+                      borderRadius: 'var(--radius-sm)', marginBottom: '12px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem'
+                    }}>🎬</div>
+                  )}
+                  <h3 style={{ 
+                    fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '0.9rem', 
+                    marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                  }} title={event.title}>
+                    {event.title}
+                  </h3>
+                  <div style={{ marginTop: 'auto' }}>
+                    <PlatformBadge platform={event.platform} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Getting Started */}
         <div>
           <div className="section-header">
             <h2 className="section-title">

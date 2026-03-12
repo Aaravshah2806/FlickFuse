@@ -7,7 +7,7 @@ import api from '../services/api';
 type SettingsTab = 'profile' | 'privacy';
 
 export default function SettingsPage() {
-  const { user, loadFromStorage } = useAuthStore();
+  const { user } = useAuthStore();
   const [tab, setTab] = useState<SettingsTab>('profile');
 
   // Profile state
@@ -25,6 +25,14 @@ export default function SettingsPage() {
   const [recSharing, setRecSharing] = useState(true);
   const [privacySaving, setPrivacySaving] = useState(false);
   const [privacyMsg, setPrivacyMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.displayName || '');
+      setBio(user.bio || '');
+      setUsername(user.username || '');
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user?.privacySettings) {
@@ -49,12 +57,10 @@ export default function SettingsPage() {
     setProfileMsg(null);
     try {
       await api.put('/api/users/profile', { displayName, bio, username });
-      const { data } = await api.get('/api/auth/me');
-      localStorage.setItem('ss_user', JSON.stringify(data));
-      loadFromStorage();
       setProfileMsg({ type: 'success', text: 'Profile saved successfully!' });
     } catch (err: unknown) {
-      setProfileMsg({ type: 'error', text: (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Save failed' });
+      const errMsg = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Save failed';
+      setProfileMsg({ type: 'error', text: errMsg });
     } finally { setProfileSaving(false); }
   };
 

@@ -16,6 +16,15 @@ _redis: aioredis.Redis | None = None
 _redis_connected: bool = False
 
 # ─── PostgreSQL ───────────────────────────────────────────────────────────────
+async def _init_connection(conn):
+    await conn.set_type_codec(
+        'uuid',
+        encoder=str,
+        decoder=str,
+        schema='pg_catalog',
+        format='text'
+    )
+
 async def connect_postgres() -> None:
     global _pool
     try:
@@ -24,6 +33,7 @@ async def connect_postgres() -> None:
             min_size=2,
             max_size=20,
             command_timeout=10,
+            init=_init_connection
         )
         print("✓ PostgreSQL connected")
     except Exception as exc:

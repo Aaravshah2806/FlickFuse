@@ -7,6 +7,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+      - VITE_CLERK_PUBLISHABLE_KEY=your-clerk-publishable-key
     depends_on:
       - python-backend
 
@@ -22,8 +25,7 @@ services:
       - DATABASE_URL=postgresql://user:password@postgres:5432/flickfuse
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
-      - JWT_ACCESS_EXPIRY_HOURS=24
-      - JWT_REFRESH_EXPIRY_DAYS=30
+      - CLERK_ISSUER=https://your-app.clerk.accounts.dev
     depends_on:
       postgres:
         condition: service_healthy

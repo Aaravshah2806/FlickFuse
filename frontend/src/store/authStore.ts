@@ -14,68 +14,51 @@ interface User {
 
 interface AuthState {
   user: User | null;
-  token: string | null;
-  isLoading: boolean;
-  error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, username: string) => Promise<void>;
-  logout: () => void;
-  loadFromStorage: () => void;
-  clearError: () => void;
+  isInitialized: boolean;
+  syncFromClerk: (clerkUserId: string | null | undefined, getToken: (() => Promise<string | null>) | null) => Promise<void>;
+  setUser: (user: User | null) => void;
+  clearUser: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: null,
-  isLoading: false,
-  error: null,
+  isInitialized: false,
 
-  loadFromStorage: () => {
-    const token = localStorage.getItem('ss_access_token');
-    const userStr = localStorage.getItem('ss_user');
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        set({ user, token });
-      } catch { /* ignore */ }
+  syncFromClerk: async (clerkUserId, getToken) => {
+    if (!clerkUserId || !getToken) {
+      set({ user: null, isInitialized: true });
+      return;
     }
-  },
 
-  login: async (email, password) => {
-    set({ isLoading: true, error: null });
     try {
-      const { data } = await api.post('/api/auth/login', { email, password });
-      localStorage.setItem('ss_access_token', data.accessToken);
-      localStorage.setItem('ss_user', JSON.stringify(data.user));
-      set({ user: data.user, token: data.accessToken, isLoading: false });
-    } catch (err: unknown) {
-      const responseData = (err as { response?: { data?: { error?: string, detail?: string } } }).response?.data;
-      const msg = responseData?.error || responseData?.detail || 'Login failed';
-      set({ error: msg, isLoading: false });
-      throw err;
+      // Get a fresh token from Clerk and store it for the API interceptor
+      const token = await getToken();
+      if (token) {
+        localStorage.setItem('ss_access_token', token);
+      }
+
+      // Fetch the user profile from our backend
+      const { data } = await api.get('/api/auth/me');
+      const user: User = {
+        id: data.id,
+        email: data.email,
+        username: data.username,
+        uniqueId: data.uniqueId,
+        displayName: data.displayName,
+        profilePictureUrl: data.profilePictureUrl,
+        bio: data.bio,
+        privacySettings: data.privacySettings,
+      };
+      set({ user, isInitialized: true });
+    } catch {
+      // Backend might not have this user yet — that's okay, auto-provisioning handles it
+      set({ user: null, isInitialized: true });
     }
   },
 
-  register: async (email, password, username) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data } = await api.post('/api/auth/register', { email, password, username });
-      localStorage.setItem('ss_access_token', data.accessToken);
-      localStorage.setItem('ss_user', JSON.stringify(data.user));
-      set({ user: data.user, token: data.accessToken, isLoading: false });
-    } catch (err: unknown) {
-      const responseData = (err as { response?: { data?: { error?: string, detail?: string } } }).response?.data;
-      const msg = responseData?.error || responseData?.detail || 'Registration failed';
-      set({ error: msg, isLoading: false });
-      throw err;
-    }
-  },
-
-  logout: () => {
+  setUser: (user) => set({ user }),
+  clearUser: () => {
     localStorage.removeItem('ss_access_token');
-    localStorage.removeItem('ss_user');
-    set({ user: null, token: null });
+    set({ user: null });
   },
-
-  clearError: () => set({ error: null }),
 }));

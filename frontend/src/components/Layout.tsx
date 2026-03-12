@@ -1,17 +1,12 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Sparkles, Users, BookMarked, LogOut, User } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Home, Sparkles, Users, BookMarked, User } from 'lucide-react';
+import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
 import { useAuthStore } from '../store/authStore';
 import { useEffect, useRef } from 'react';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
+  const { user } = useAuthStore();
   const mainRef = useRef<HTMLElement>(null);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
   // Scroll reveal observer
   useEffect(() => {
@@ -78,22 +73,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="navbar-actions">
-          {user && (
-            <>
-              <NavLink to="/settings" className={({ isActive }) => `navbar-link${isActive ? ' active' : ''}`}>
-                <div className="avatar avatar-sm">{(user.displayName || user.username || 'U')[0].toUpperCase()}</div>
-              </NavLink>
-              <button className="navbar-link" onClick={handleLogout} title="Logout">
-                <LogOut size={15} />
-              </button>
-            </>
-          )}
-          {!user && (
-            <>
-              <NavLink to="/login" className="btn btn-ghost btn-sm"><User size={15}/> Login</NavLink>
-              <NavLink to="/signup" className="btn btn-primary btn-sm">Get Started</NavLink>
-            </>
-          )}
+          <SignedIn>
+            <NavLink to="/settings" className={({ isActive }) => `navbar-link${isActive ? ' active' : ''}`}>
+              <div className="avatar avatar-sm">{(user?.displayName || user?.username || 'U')[0].toUpperCase()}</div>
+            </NavLink>
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: { width: 28, height: 28 },
+                },
+              }}
+            />
+          </SignedIn>
+          <SignedOut>
+            <NavLink to="/login" className="btn btn-ghost btn-sm"><User size={15}/> Login</NavLink>
+            <NavLink to="/signup" className="btn btn-primary btn-sm">Get Started</NavLink>
+          </SignedOut>
         </div>
       </nav>
 
