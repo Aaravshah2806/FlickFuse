@@ -1,0 +1,176 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Extended profile linked to Supabase auth.users
+CREATE TABLE public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    username TEXT UNIQUE NOT NULL,
+    unique_id VARCHAR(10) UNIQUE NOT NULL, -- ABC-12345 format
+    display_name TEXT,
+    bio TEXT,
+    avatar_url TEXT,
+    favorite_genres TEXT[] DEFAULT '{}',
+    preferred_languages TEXT[] DEFAULT '{}',
+    privacy_settings JSONB DEFAULT '{
+        "profile_visibility": "public",
+        "taste_profile_sharing": "all_friends",
+        "activity_visibility": true,
+        "recommendation_sharing": true
+    }',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Auto-generate unique_id (ABC-12345 format)
+CREATE OR REPLACE FUNCTION generate_unique_id()
+RETURNS VARCHAR(10) AS $$
+DECLARE
+    new_id VARCHAR(10);
+BEGIN
+    LOOP
+        new_id := chr(65 + floor(random() * 26)::int) ||
+                  chr(65 + floor(random() * 26)::int) ||
+                  chr(65 + floor(random() * 26)::int) ||
+                  '-' ||
+                  lpad(floor(random() * 100000)::text, 5, '0');
+        IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE unique_id = new_id) THEN
+            RETURN new_id;
+        END IF;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+-- Auto-create profile on user signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.profiles (id, username)
+    VALUES (
+        NEW.id,
+        COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1))
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+CREATE TABLE public.watch_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    platform VARCHAR(50) NOT NULL CHECK (platform IN (
+        'netflix', 'prime_video', 'hotstar', 'apple_tv', 
+        'hbo_max', 'hulu', 'youtube'
+    )),
+    title TEXT NOT NULL,
+    normalized_title TEXT NOT NULL,
+    content_type VARCHAR(20) CHECK (content_type IN ('movie', 'series', 'episode', 'short')),
+    date_watched TIMESTAMPTZ NOT NULL,
+    duration_minutes INTEGER,
+    metadata JSONB DEFAULT '{}',
+    catalog_id UUID, -- Will link to content_catalog
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, platform, normalized_title, date_watched)
+);
+-- Indexes
+CREATE INDEX idx_watch_events_user_id ON public.watch_events(user_id);
+CREATE INDEX idx_watch_events_platform ON public.watch_events(platform);
+CREATE INDEX idx_watch_events_date ON public.watch_events(date_watched DESC);
+-- Normalize title function
+CREATE OR REPLACE FUNCTION normalize_title(title TEXT)
+RETURNS TEXT AS $$
+BEGIN
+    RETURN lower(regexp_replace(title, '[^a-zA-Z0-9\s]', '', 'g'));
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+-- Auto-normalize title
+CREATE OR REPLACE FUNCTION set_normalized_title()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.normalized_title := normalize_title(NEW.title);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER trigger_normalize_title
+    BEFORE INSERT ON public.watch_events
+    FOR EACH ROW EXECUTE FUNCTION set_normalized_title();
+
+CREATE TABLE public.content_catalog (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    release_year INTEGER,
+    content_type VARCHAR(20) NOT NULL CHECK (content_type IN ('movie', 'series', 'episode', 'short')),
+    genres TEXT[] DEFAULT '{}',
+    languages TEXT[] DEFAULT '{}',
+    synopsis TEXT,
+    ratings JSONB DEFAULT '{}',
+    platform_availability TEXT[] DEFAULT '{}',
+    metadata JSONB DEFAULT '{}',
+    tmdb_id INTEGER UNIQUE,
+    imdb_id VARCHAR(20),
+    poster_path TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_catalog_title ON public.content_catalog USING btree(title);
+CREATE INDEX idx_catalog_genres ON public.content_catalog USING GIN(genres);
+CREATE INDEX idx_catalog_tmdb_id ON public.content_catalog(tmdb_id);
+
+CREATE TABLE public.taste_profiles (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID UNIQUE NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    genre_vector JSONB DEFAULT '{}',
+    language_preferences JSONB DEFAULT '{}',
+    viewing_patterns JSONB DEFAULT '{}',
+    recent_favorites JSONB DEFAULT '[]',
+    last_computed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE public.recommendations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    catalog_id UUID NOT NULL REFERENCES public.content_catalog(id),
+    match_score INTEGER NOT NULL CHECK (match_score BETWEEN 0 AND 100),
+    reason TEXT NOT NULL,
+    generated_at TIMESTAMPTZ DEFAULT NOW(),
+    user_feedback VARCHAR(20) CHECK (user_feedback IN ('watched', 'want_to_watch', 'not_interested')),
+    feedback_at TIMESTAMPTZ
+);
+CREATE INDEX idx_recommendations_user_id ON public.recommendations(user_id);
+CREATE UNIQUE INDEX idx_recommendations_unique 
+    ON public.recommendations(user_id, catalog_id, generated_at);
+
+CREATE TABLE public.friendships (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    requester_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    addressee_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'blocked')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(requester_id, addressee_id),
+    CHECK (requester_id != addressee_id)
+);
+CREATE INDEX idx_friendships_requester ON public.friendships(requester_id);
+CREATE INDEX idx_friendships_addressee ON public.friendships(addressee_id);
+
+CREATE TABLE public.user_lists (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    visibility VARCHAR(20) NOT NULL DEFAULT 'friends' CHECK (visibility IN ('public', 'friends', 'private')),
+    tags TEXT[] DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE public.user_list_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    list_id UUID NOT NULL REFERENCES public.user_lists(id) ON DELETE CASCADE,
+    catalog_id UUID NOT NULL REFERENCES public.content_catalog(id),
+    position INTEGER NOT NULL,
+    notes TEXT,
+    added_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(list_id, catalog_id)
+);
+CREATE INDEX idx_lists_user_id ON public.user_lists(user_id);
+CREATE INDEX idx_list_items_list_id ON public.user_list_items(list_id);
