@@ -24,6 +24,9 @@ export interface BatchMatchResult {
   errors: number;
 }
 
+const CONCURRENCY_LIMIT = 8;
+const MIN_CONFIDENCE = 70;
+
 function normalizeTitle(title: string): string {
   return title
     .toLowerCase()
@@ -39,7 +42,7 @@ function calculateSimilarity(a: string, b: string): number {
   if (aNorm === bNorm) return 100;
   
   if (aNorm.includes(bNorm) || bNorm.includes(aNorm)) {
-    return 85;
+    return 90;
   }
   
   const maxLen = Math.max(aNorm.length, bNorm.length);
@@ -87,7 +90,7 @@ async function searchMovie(title: string, year?: number): Promise<TMDBMatch | nu
       }
     }
     
-    if (bestMatch && bestMatch.confidence >= 70) {
+    if (bestMatch && bestMatch.confidence >= MIN_CONFIDENCE) {
       return {
         tmdb_id: bestMatch.movie.id,
         title: bestMatch.movie.title,
@@ -99,8 +102,7 @@ async function searchMovie(title: string, year?: number): Promise<TMDBMatch | nu
     }
     
     return null;
-  } catch (error) {
-    console.error('Error searching movies:', error);
+  } catch {
     return null;
   }
 }
@@ -121,7 +123,7 @@ async function searchTV(title: string): Promise<TMDBMatch | null> {
       }
     }
     
-    if (bestMatch && bestMatch.confidence >= 70) {
+    if (bestMatch && bestMatch.confidence >= MIN_CONFIDENCE) {
       return {
         tmdb_id: bestMatch.show.id,
         title: bestMatch.show.name,
@@ -133,8 +135,7 @@ async function searchTV(title: string): Promise<TMDBMatch | null> {
     }
     
     return null;
-  } catch (error) {
-    console.error('Error searching TV shows:', error);
+  } catch {
     return null;
   }
 }
@@ -167,52 +168,92 @@ export async function findBestMatch(entry: ParsedEntry): Promise<MatchResult> {
   }
 }
 
+async function processChunk<T, R>(
+  items: T[],
+  processor: (item: T) => Promise<R>,
+  onProgress?: (completed: number, total: number) => void,
+  concurrency: number = CONCURRENCY_LIMIT
+): Promise<R[]> {
+  const results: R[] = [];
+  let completed = 0;
+  
+  for (let i = 0; i < items.length; i += concurrency) {
+    const chunk = items.slice(i, i + concurrency);
+    const chunkResults = await Promise.all(chunk.map(processor));
+    results.push(...chunkResults);
+    completed += chunk.length;
+    
+    if (onProgress) {
+      onProgress(completed, items.length);
+    }
+  }
+  
+  return results;
+}
+
 export async function batchMatch(
   entries: ParsedEntry[],
   onProgress?: (current: number, total: number) => void
 ): Promise<BatchMatchResult> {
-  const results: MatchResult[] = [];
+  const normalizedCache = new Map<string, ParsedEntry>();
+  
+  entries.forEach(entry => {
+    const key = `${entry.type}:${normalizeTitle(entry.showName || entry.title)}`;
+    if (!normalizedCache.has(key)) {
+      normalizedCache.set(key, entry);
+    }
+  });
+  
+  const uniqueList = Array.from(normalizedCache.values());
+  
+  const results = await processChunk(
+    uniqueList,
+    findBestMatch,
+    onProgress,
+    CONCURRENCY_LIMIT
+  );
+  
   let matched = 0;
   let unmatched = 0;
   let errors = 0;
   
-  const uniqueEntries = new Map<string, ParsedEntry>();
-  entries.forEach(entry => {
-    const key = `${entry.type}:${entry.showName || entry.title}`;
-    if (!uniqueEntries.has(key)) {
-      uniqueEntries.set(key, entry);
-    }
-  });
-  
-  const uniqueList = Array.from(uniqueEntries.values());
-  const total = uniqueList.length;
-  
-  for (let i = 0; i < uniqueList.length; i++) {
-    const entry = uniqueList[i];
-    const result = await findBestMatch(entry);
-    results.push(result);
-    
+  for (const result of results) {
     if (result.status === 'matched') matched++;
     else if (result.status === 'no_match') unmatched++;
     else errors++;
-    
-    if (onProgress) {
-      onProgress(i + 1, total);
-    }
-    
-    if (i < uniqueList.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  const allResults: MatchResult[] = [];
+  const seenKeys = new Set<string>();
+  
+  for (const result of results) {
+    const key = `${result.entry.type}:${normalizeTitle(result.entry.showName || result.entry.title)}`;
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      allResults.push(result);
     }
   }
   
-  return { results, matched, unmatched, errors };
+  entries.forEach(entry => {
+    const key = `${entry.type}:${normalizeTitle(entry.showName || entry.title)}`;
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      allResults.push({
+        entry,
+        match: null,
+        status: 'no_match',
+      });
+    }
+  });
+  
+  return { results: allResults, matched, unmatched, errors };
 }
 
 export function buildMatchLookup(results: MatchResult[]): Map<string, TMDBMatch | null> {
   const lookup = new Map<string, TMDBMatch | null>();
   
   results.forEach(result => {
-    const key = `${result.entry.type}:${result.entry.showName || result.entry.title}`;
+    const key = `${result.entry.type}:${normalizeTitle(result.entry.showName || result.entry.title)}`;
     lookup.set(key, result.match);
   });
   
